@@ -23,80 +23,6 @@ void UResourceExporterBP::ExportStaticMesh(const UStaticMesh* StaticMesh, FStrin
 	ExportStructByJsonConverter(Data, Path, Filename);
 }
 
-void UResourceExporterBP::ExportSMDataByJsonObj(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath, const FString& Filename)
-{
-	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
-
-	TSharedPtr<FJsonObject> JsonObject_data = MakeShareable(new FJsonObject);
-	JsonObject->SetObjectField("data", JsonObject_data);
-	JsonObject_data->SetStringField("vs_format", "...");
-
-	TArray<TSharedPtr<FJsonValue>> IndicesValueArray;
-	for (int i = 0; i < Indices.Num(); ++i)
-	{
-		IndicesValueArray.Add(MakeShared<FJsonValueNumber>(Indices[i]));
-	}
-	JsonObject_data->SetArrayField("indices", IndicesValueArray);
-
-	TArray<TSharedPtr<FJsonValue>> VerticesJsonObj;
-	for (int i = 0; i < Vertices.Num(); ++i)
-	{
-		TSharedPtr<FJsonObject> JsonObject_verticeElement = MakeShareable(new FJsonObject);
-
-		JsonObject_verticeElement->SetNumberField(TEXT("X"), Vertices[i].Position.X);
-		JsonObject_verticeElement->SetNumberField(TEXT("Y"), Vertices[i].Position.Y);
-		JsonObject_verticeElement->SetNumberField(TEXT("Z"), Vertices[i].Position.Z);
-
-		VerticesJsonObj.Add(MakeShared<FJsonValueObject>(JsonObject_verticeElement));
-	}
-	JsonObject_data->SetArrayField("vertices", VerticesJsonObj);
-
-	FString OutputString;
-
-	TSharedRef<FPrettyJsonWriter> Writer = FPrettyJsonWriterFactory::Create(&OutputString);
-	FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-
-	WriteFile(OutputString, OutputPath, Filename);
-}
-
-void UResourceExporterBP::ExportSMDataByJsonWriter(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath, const FString& Filename)
-{
-	FString OutputString;
-
-	TSharedRef<FPrettyJsonWriter> Writer = FPrettyJsonWriterFactory::Create(&OutputString);
-
-	Writer->WriteObjectStart();
-	Writer->WriteObjectStart(TEXT("data"));
-
-	Writer->WriteArrayStart(TEXT("vs_format"));
-	Writer->WriteValue(TEXT("..."));
-	Writer->WriteArrayEnd();
-
-	Writer->WriteArrayStart(TEXT("Indices"));
-	for (auto i : Indices)
-	{
-		Writer->WriteValue(i);
-	}
-	Writer->WriteArrayEnd();
-
-	Writer->WriteArrayStart(TEXT("Vertices"));
-	for (auto i : Vertices)
-	{
-		Writer->WriteObjectStart();
-		Writer->WriteValue(TEXT("X"), i.Position.X);
-		Writer->WriteValue(TEXT("Y"), i.Position.Y);
-		Writer->WriteValue(TEXT("Z"), i.Position.Z);
-		Writer->WriteObjectEnd();
-	}
-	Writer->WriteArrayEnd();
-	Writer->WriteObjectEnd();
-
-	Writer->WriteObjectEnd();
-	Writer->Close();
-
-	WriteFile(OutputString, OutputPath, Filename);
-}
-
 void UResourceExporterBP::WriteFile(const FString& FileString, FString OutputPath, const FString& Filename)
 {
 	if (OutputPath.IsEmpty())
@@ -226,3 +152,78 @@ void UResourceExporterBP::GetIndicesData(const UStaticMesh* StaticMesh, TArray<i
 
 	Output = Indices;
 }
+
+void UResourceExporterBP::ExportSMDataByJsonObj(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath, const FString& Filename)
+{
+	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+
+	TSharedPtr<FJsonObject> JsonObject_data = MakeShareable(new FJsonObject);
+	JsonObject->SetObjectField("data", JsonObject_data);
+	JsonObject_data->SetStringField("vs_format", "...");
+
+	TArray<TSharedPtr<FJsonValue>> IndicesValueArray;
+	for (int i = 0; i < Indices.Num(); ++i)
+	{
+		IndicesValueArray.Add(MakeShared<FJsonValueNumber>(Indices[i]));
+	}
+	JsonObject_data->SetArrayField("indices", IndicesValueArray);
+
+	TArray<TSharedPtr<FJsonValue>> VerticesJsonObj;
+	for (int i = 0; i < Vertices.Num(); ++i)
+	{
+		TSharedPtr<FJsonObject> JsonObject_verticeElement = MakeShareable(new FJsonObject);
+
+		JsonObject_verticeElement->SetNumberField(TEXT("X"), Vertices[i].Position.X);
+		JsonObject_verticeElement->SetNumberField(TEXT("Y"), Vertices[i].Position.Y);
+		JsonObject_verticeElement->SetNumberField(TEXT("Z"), Vertices[i].Position.Z);
+
+		VerticesJsonObj.Add(MakeShared<FJsonValueObject>(JsonObject_verticeElement));
+	}
+	JsonObject_data->SetArrayField("vertices", VerticesJsonObj);
+
+	FString OutputString;
+
+	TSharedRef<FPrettyJsonWriter> Writer = FPrettyJsonWriterFactory::Create(&OutputString);
+	FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+
+	WriteFile(OutputString, OutputPath, Filename);
+}
+
+void UResourceExporterBP::ExportSMDataByJsonWriter(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath, const FString& Filename)
+{
+	FString OutputString;
+
+	TSharedRef<FPrettyJsonWriter> Writer = FPrettyJsonWriterFactory::Create(&OutputString);
+
+	Writer->WriteObjectStart();
+	Writer->WriteObjectStart(TEXT("data"));
+
+	Writer->WriteArrayStart(TEXT("vs_format"));
+	Writer->WriteValue(TEXT("..."));
+	Writer->WriteArrayEnd();
+
+	Writer->WriteArrayStart(TEXT("Indices"));
+	for (auto i : Indices)
+	{
+		Writer->WriteValue(i);
+	}
+	Writer->WriteArrayEnd();
+
+	Writer->WriteArrayStart(TEXT("Vertices"));
+	for (auto i : Vertices)
+	{
+		Writer->WriteObjectStart();
+		Writer->WriteValue(TEXT("X"), i.Position.X);
+		Writer->WriteValue(TEXT("Y"), i.Position.Y);
+		Writer->WriteValue(TEXT("Z"), i.Position.Z);
+		Writer->WriteObjectEnd();
+	}
+	Writer->WriteArrayEnd();
+	Writer->WriteObjectEnd();
+
+	Writer->WriteObjectEnd();
+	Writer->Close();
+
+	WriteFile(OutputString, OutputPath, Filename);
+}
+
