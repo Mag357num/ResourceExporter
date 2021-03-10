@@ -10,7 +10,7 @@
 typedef TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriter;
 typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriterFactory;
 
-//CORE_API DECLARE_LOG_CATEGORY_EXTERN(ResourceExporter, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogResExporter, Log, All);
 
 void UResourceExporterBP::ExportStaticMesh(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
 {
@@ -32,17 +32,16 @@ void UResourceExporterBP::WriteFile(const FString& FileString, FString OutputPat
 		OutputPath = FPaths::ProfilingDir();
 	}
 
-	//FString Fullname = FPaths::CreateTempFilename(*OutputPath, *Filename, TEXT(".json"));
 	FString Fullname = OutputPath + Filename + TEXT(".json");
 
 	if (!FFileHelper::SaveStringToFile(FileString, *Fullname, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
 	{
-		UE_LOG(LogTemp, Display, TEXT("Failed to write to temp file: %s"), *Fullname);
+		UE_LOG(LogResExporter, Display, TEXT("Failed to write to temp file: %s"), *Fullname);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Failed to write to temp file: %s"), *Fullname));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Succeed to save file: %s"), *Fullname);
+		UE_LOG(LogResExporter, Error, TEXT("Succeed to save file: %s"), *Fullname);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Succeed to save file: %s"), *Fullname));
 	}
 }
