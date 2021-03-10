@@ -16,6 +16,6 @@ struct RESOURCEEXPORTER_API FCameraArray
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	TArray<FCameraData> Cameras;
 };

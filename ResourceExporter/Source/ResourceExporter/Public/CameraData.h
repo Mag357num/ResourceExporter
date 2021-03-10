@@ -16,19 +16,19 @@ struct RESOURCEEXPORTER_API FCameraData
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	FVector Location;
 
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	FVector Target;
 
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	FQuat Rotator;
 
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	float Fov;
 
-	UPROPERTY(BlueprintReadOnly, Category = "PluginTest")
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	float Aspect;
 
 public:
