@@ -10,9 +10,11 @@
 typedef TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriter;
 typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriterFactory;
 
+//CORE_API DECLARE_LOG_CATEGORY_EXTERN(ResourceExporter, Log, All);
+
 void UResourceExporterBP::ExportStaticMesh(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
 {
-	TArray<FVertexStruct> Vertices;
+	TArray<float> Vertices;
 	GetVerticesData(StaticMesh, Vertices);
 
 	TArray<int32> Indices;
@@ -30,10 +32,12 @@ void UResourceExporterBP::WriteFile(const FString& FileString, FString OutputPat
 		OutputPath = FPaths::ProfilingDir();
 	}
 
-	FString Fullname = FPaths::CreateTempFilename(*OutputPath, *Filename, TEXT(".json"));
+	//FString Fullname = FPaths::CreateTempFilename(*OutputPath, *Filename, TEXT(".json"));
+	FString Fullname = OutputPath + Filename + TEXT(".json");
+
 	if (!FFileHelper::SaveStringToFile(FileString, *Fullname, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write to temp file: %s"), *Fullname);
+		UE_LOG(LogTemp, Display, TEXT("Failed to write to temp file: %s"), *Fullname);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Failed to write to temp file: %s"), *Fullname));
 	}
 	else
@@ -84,9 +88,9 @@ void UResourceExporterBP::ExportAllCameras(const UObject* WorldContextObject, FS
 	ExportStructByJsonConverter(Data, OutputPath, Filename);
 }
 
-void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<FVertexStruct>& Output)
+void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output)
 {
-	TArray<FVertexStruct> Vertices;
+	TArray<float> Vertices;
 
 	if (!StaticMesh || !StaticMesh->RenderData)
 	{
@@ -102,21 +106,19 @@ void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<
 
 			for (uint32 i = 0; i < VertexBuffers->PositionVertexBuffer.GetNumVertices(); i++)
 			{
-				FVertexStruct Vertex;
-				Vertex.Index = (int32)i;
-				Vertex.Position = VertexBuffers->PositionVertexBuffer.VertexPosition(i);
-				Vertex.Normal = VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i);
-				Vertex.TexCoord0 = VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0);
-				if (UVChannelNum > 1)
-				{
-					Vertex.TexCoord1 = VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 1);
-				}
-				if (UVChannelNum > 2)
-				{
-					Vertex.TexCoord2 = VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 2);
-				}
+				Vertices.Add(VertexBuffers->PositionVertexBuffer.VertexPosition(i).X);
+				Vertices.Add(VertexBuffers->PositionVertexBuffer.VertexPosition(i).Y);
+				Vertices.Add(VertexBuffers->PositionVertexBuffer.VertexPosition(i).Z);
 
-				Vertices.Add(Vertex);
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).X);
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).Y);
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).Z);
+
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0).X);
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0).Y);
+
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 1).X);
+				Vertices.Add(VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 1).Y);
 			}
 		}
 		else

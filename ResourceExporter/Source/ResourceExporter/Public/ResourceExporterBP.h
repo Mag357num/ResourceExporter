@@ -36,7 +36,7 @@ public:
 	static void WriteFile(const FString& FileString, FString OutputPath, const FString& Filename);
 
 	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
-	static void GetVerticesData(const UStaticMesh* StaticMesh, TArray<FVertexStruct>& Output);
+	static void GetVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output);
 
 	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
 	static void GetIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output);

@@ -24,9 +24,9 @@ struct RESOURCEEXPORTER_API FStaticMeshData
 	FString VsFormat;
 
 	UPROPERTY(BlueprintReadOnly, Category = "StaticMesh")
-	TArray<FVertexStruct> Vertices;
+	TArray<float> Vertices;
 
 public:
 	FStaticMeshData() = default;
-	FStaticMeshData(TArray<FVertexStruct> Vertices, TArray<int32> Indices);
+	FStaticMeshData(TArray<float> Vertices, TArray<int32> Indices);
 };
