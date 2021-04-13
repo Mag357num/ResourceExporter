@@ -17,16 +17,25 @@ class RESOURCEEXPORTER_API UResourceExporterBP : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
+	//UFUNCTION(BlueprintCallable, Category = "ResExport")
+	//static void ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
+
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
+	static void ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
+
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportStaticMesh(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleStaticMesh_"));
 
-	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportSMDataByJsonObj(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleStaticMesh_"));
 
-	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportSMDataByJsonWriter(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleStaticMesh_"));
 
-	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (WorldContext = WorldContextObject))
+	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
+	static void ExportCameraBinary(const UObject* WorldContextObject, const UCameraComponent* CameraComponent, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleCameraData_"));
+	
+	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
 	static void ExportCamera(const UObject* WorldContextObject, const UCameraComponent* CameraComponent, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleCameraData_"));
 
 	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (WorldContext = WorldContextObject))

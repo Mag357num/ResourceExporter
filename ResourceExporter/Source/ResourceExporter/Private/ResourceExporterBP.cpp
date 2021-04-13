@@ -3,14 +3,124 @@
 
 #include "ResourceExporterBP.h"
 #include "Camera/CameraComponent.h"
+#include "Math/Vector2D.h"
 #include "CameraArray.h"
 #include "Kismet/GameplayStatics.h"
 #include "JsonObjectConverter.h"
+#include "Serialization/Archive.h"
 
 typedef TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriter;
 typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriterFactory;
 
 DEFINE_LOG_CATEGORY_STATIC(LogResExporter, Log, All);
+
+namespace OutputData
+{
+	#pragma pack(push)
+	#pragma pack(1)
+	struct FVertex
+	{
+		FVector Position;
+		FVector TangentZ;
+		FVector2D UV0;
+		FVector2D UV1;
+		FVector4 Color;
+	}; // sizeof(FVertex) 的问题?
+	#pragma pack(pop)
+
+	class FMeshBinData
+	{
+	public:
+		int32 VertStride;
+		TArray<FVertex> Vertice;
+		TArray<int32> Indice;
+	};
+
+	#pragma pack(push)
+	#pragma pack(1)
+	struct FCameraBinData
+	{
+		FVector Position;
+		FVector Dir;
+		FVector Rotator;
+		float Fov;
+		float Aspect;
+	};
+	#pragma pack(pop)
+
+	FArchive& operator<<(FArchive& Ar, FVertex& Value)
+	{
+		Ar << Value.Position;
+		Ar << Value.TangentZ;
+		Ar << Value.UV0;
+		Ar << Value.UV1;
+		Ar << Value.Color;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FMeshBinData& Value)
+	{
+		Ar << Value.VertStride;
+		Ar << Value.Vertice;
+		Ar << Value.Indice;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FCameraBinData& Value)
+	{
+		Ar << Value.Position;
+		Ar << Value.Dir;
+		Ar << Value.Rotator;
+		Ar << Value.Fov;
+		Ar << Value.Aspect;
+		return Ar;
+	}
+}
+
+using OutputData::FVertex;
+using OutputData::FMeshBinData;
+using OutputData::FCameraBinData;
+
+void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
+{
+	if (Path.IsEmpty())
+	{
+		Path = FPaths::ProfilingDir();
+	}
+
+	FString Fullname = Path + Filename + TEXT(".dat");
+	const TCHAR* FullnameTCHAR = *Fullname;
+
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	TArray<float> Vertices;
+	GetVerticesData(StaticMesh, Vertices);
+
+	TArray<int32> Indices;
+	GetIndicesData(StaticMesh, Indices);
+
+	FMeshBinData MeshTarget;
+	for (int32 i = 0; i < Vertices.Num(); i++)
+	{
+		FVertex OneVertex;
+		OneVertex.Position = FVector(Vertices[i], Vertices[i + 1], Vertices[i + 2]);
+		OneVertex.TangentZ = FVector(Vertices[i + 3], Vertices[i + 4], Vertices[i + 5]);
+		OneVertex.UV0 = FVector2D(Vertices[i + 6], Vertices[i + 7]);
+		OneVertex.UV1 = FVector2D(Vertices[i + 8], Vertices[i + 9]);
+		OneVertex.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		MeshTarget.Vertice.Add(OneVertex); // TODO: push a stack obj or heap obj? will it be release? tried and found out it wont be release, but still dk is it correct.
+		i += 9;
+	}
+	MeshTarget.Indice = MoveTemp(Indices);
+	MeshTarget.VertStride = 56; // TODO: sth wrong with sizeof(FVector3), should get 56, but get 64.
+	////0.12.24.32.48.64.
+	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d.%d.%d.%d."), offsetof(FVertex, Position), offsetof(FVertex, TangentZ), offsetof(FVertex, UV0), offsetof(FVertex, UV1), offsetof(FVertex, Color));
+	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d"), sizeof(FVector), sizeof(FVector2D), sizeof(FVector4));
+
+	*File << MeshTarget;
+
+	File->Close();
+}
 
 void UResourceExporterBP::ExportStaticMesh(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
 {
@@ -46,14 +156,41 @@ void UResourceExporterBP::WriteFile(const FString& FileString, FString OutputPat
 	}
 }
 
+void UResourceExporterBP::ExportCameraBinary(const UObject* WorldContextObject, const UCameraComponent* CameraComponent, FString Path, const FString& Filename)
+{
+	if (Path.IsEmpty())
+	{
+		Path = FPaths::ProfilingDir();
+	}
+
+	FString Fullname = Path + Filename + TEXT(".dat");
+	const TCHAR* FullnameTCHAR = *Fullname;
+
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	//UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+
+	FCameraBinData CamTarget;
+	FTransform Trans = CameraComponent->GetComponentToWorld();
+	CamTarget.Position = Trans.GetLocation();
+	CamTarget.Dir = CameraComponent->GetForwardVector();
+	CamTarget.Rotator = Trans.GetRotation().Euler();
+	CamTarget.Fov = CameraComponent->FieldOfView;
+	CamTarget.Aspect = CameraComponent->AspectRatio;
+
+	*File << CamTarget;
+
+	File->Close();
+}
+
 void UResourceExporterBP::ExportCamera(const UObject* WorldContextObject, const UCameraComponent* CameraComponent, FString OutputPath, const FString& Filename)
 {
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	//UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
 	FCameraData CamData;
 
 	FTransform Trans = CameraComponent->GetComponentToWorld();
 	CamData.Location = Trans.GetLocation();
-	CamData.Rotator = Trans.GetRotation();
+	CamData.Rotator = Trans.GetRotation().Euler();
 	CamData.Target = CamData.Location + CameraComponent->GetForwardVector();
 	CamData.Fov = CameraComponent->FieldOfView;
 	CamData.Aspect = CameraComponent->AspectRatio;
@@ -76,7 +213,7 @@ void UResourceExporterBP::ExportAllCameras(const UObject* WorldContextObject, FS
 			FCameraData CamData = FCameraData();
 			FTransform Trans = CamCom->GetComponentToWorld();
 			CamData.Location = Trans.GetLocation();
-			CamData.Rotator = Trans.GetRotation();
+			CamData.Rotator = Trans.GetRotation().Euler();
 			CamData.Target = CamData.Location + CamCom->GetForwardVector();
 			CamData.Fov = CamCom->FieldOfView;
 			CamData.Aspect = CamCom->AspectRatio;
@@ -101,7 +238,7 @@ void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<
 
 		if (VertexBuffers)
 		{
-			int32 UVChannelNum = VertexBuffers->StaticMeshVertexBuffer.GetNumTexCoords();
+			//int32 UVChannelNum = VertexBuffers->StaticMeshVertexBuffer.GetNumTexCoords();
 
 			for (uint32 i = 0; i < VertexBuffers->PositionVertexBuffer.GetNumVertices(); i++)
 			{

@@ -23,7 +23,7 @@ public:
 	FVector Target;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
-	FQuat Rotator;
+	FVector Rotator;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	float Fov;
@@ -32,5 +32,5 @@ public:
 	float Aspect;
 
 public:
-	FCameraData() : Location(FVector()), Target(FVector()), Rotator(FQuat()), Fov(0.f), Aspect(0.f) {}
+	FCameraData() : Location(FVector()), Target(FVector()), Rotator(FVector()), Fov(0.f), Aspect(0.f) {}
 };
