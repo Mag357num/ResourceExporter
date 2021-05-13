@@ -6,7 +6,7 @@
 
 namespace RE
 {
-	FArchive& operator<<(FArchive& Ar, FStaticVertex& Value)
+	FArchive& operator<<(FArchive& Ar, FStaticVertex_RE& Value)
 	{
 		Ar << Value.Position;
 		Ar << Value.TangentZ;
@@ -15,14 +15,14 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FSkinnedWeightVertex& Value)
+	FArchive& operator<<(FArchive& Ar, FSkinnedWeightVertex_RE& Value)
 	{
 		Ar << Value.InfluJointIndice;
 		Ar << Value.InfluJointWeights;
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FStaticMesh& Value)
+	FArchive& operator<<(FArchive& Ar, FStaticMesh_RE& Value)
 	{
 		Ar << Value.VertStride;
 		Ar << Value.Vertice;
@@ -30,7 +30,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FSkeletalMesh& Value)
+	FArchive& operator<<(FArchive& Ar, FSkeletalMesh_RE& Value)
 	{
 		Ar << Value.VertStride;
 		Ar << Value.Vertice;
@@ -39,7 +39,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FCamera& Value)
+	FArchive& operator<<(FArchive& Ar, FCamera_RE& Value)
 	{
 		Ar << Value.Position;
 		Ar << Value.Dir;
@@ -70,13 +70,6 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FJoint& Value)
-	{
-		Ar << Value.Name;
-		Ar << Value.ParentIndex;
-		return Ar;
-	}
-
 	FArchive& operator<<(FArchive& Ar, FSkeleton_RE& Value)
 	{
 		Ar << Value.Joints;
@@ -84,4 +77,27 @@ namespace RE
 		return Ar;
 	}
 
+	FArchive& operator<<(FArchive& Ar, FJoint_RE& Value)
+	{
+		Ar << Value.Name;
+		Ar << Value.ParentIndex;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FTrack_RE& Value)
+	{
+		Ar << Value.Scales;
+		Ar << Value.Quaternions;
+		Ar << Value.Translations;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FSequence_RE& Value)
+	{
+		Ar << Value.SequenceLength;
+		Ar << Value.NumFrames;
+		Ar << Value.JointTracks;
+		Ar << Value.TrackToJointIndexMapTable;
+		return Ar;
+	}
 }

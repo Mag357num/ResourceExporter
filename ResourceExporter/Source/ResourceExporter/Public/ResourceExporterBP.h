@@ -21,6 +21,9 @@ class RESOURCEEXPORTER_API UResourceExporterBP : public UBlueprintFunctionLibrar
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
+	static void ExportSequenceBinary(UAnimSequence* Sequence, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SequenceBinary_"));
+
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletonBinary_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
@@ -68,16 +71,23 @@ public:
 		WriteFile(OutputString, OutputPath, Filename);
 	}
 private:
-	static FStaticMesh GetDataFromUStaticMesh(const UStaticMesh* SM);
-	static FSkeletalMesh GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
+	static FStaticMesh_RE GetDataFromUStaticMesh(const UStaticMesh* SM);
+	static FSkeletalMesh_RE GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
 	static FSkeleton_RE GetDataFromUSkeleton(const USkeleton* Sk);
+	static FSequence_RE GetDataFromUAnimSequence(UAnimSequence* Se);
 
-	// get skeletalmesh
-	static void GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex>& Output);
-	static void GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex>& Output);
+	// get skeletalmesh data
+	static void GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex_RE>& Output);
+	static void GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex_RE>& Output);
 	static void GetSkeletalMeshIndicesData(const USkeletalMesh* SkeletalMesh, TArray<uint32>& Output);
 
-	// get skeleton
-	static void GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint>& Output);
+	// get skeleton data
+	static void GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint_RE>& Output);
 	static void GetSkeletonBindPoseData(const USkeleton* Skeleton, TArray<FTransform>& Output);
+
+	// get sequence data
+	static void GetSequenceLengthData(UAnimSequence* Sequence, float& Output);
+	static void GetSequenceFrameNumData(const UAnimSequence* Sequence, uint32& Output);
+	static void GetSequenceTracksData(const UAnimSequence* Sequence, TArray<FTrack_RE>& Output);
+	static void GetSequenceTrackJointMapTableData(const UAnimSequence* Sequence, TArray<int32>& Output);
 };

@@ -15,6 +15,24 @@ typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWrit
 
 DEFINE_LOG_CATEGORY_STATIC(LogResExporter, Log, All);
 
+void UResourceExporterBP::ExportSequenceBinary(UAnimSequence* Sequence, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SequenceBinary_")*/)
+{
+	if (OutputPath.IsEmpty())
+	{
+		OutputPath = FPaths::ProfilingDir();
+	}
+
+	FString Fullname = OutputPath + Filename + TEXT(".dat");
+	const TCHAR* FullnameTCHAR = *Fullname;
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	FSequence_RE Target = GetDataFromUAnimSequence(Sequence);
+
+	*File << Target;
+
+	File->Close();
+}
+
 void UResourceExporterBP::ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletonBinary_")*/)
 {
 	if (OutputPath.IsEmpty())
@@ -26,9 +44,9 @@ void UResourceExporterBP::ExportSkeletonBinary(const USkeleton* Skeleton, FStrin
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FSkeleton_RE MeshTarget = GetDataFromUSkeleton(Skeleton);
+	FSkeleton_RE Target = GetDataFromUSkeleton(Skeleton);
 
-	*File << MeshTarget;
+	*File << Target;
 
 	File->Close();
 }
@@ -44,9 +62,9 @@ void UResourceExporterBP::ExportSkeletalMeshBinary(const USkeletalMesh* Skeletal
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FSkeletalMesh MeshTarget = GetDataFromUSkeletalMesh(SkeletalMesh);
+	FSkeletalMesh_RE Target = GetDataFromUSkeletalMesh(SkeletalMesh);
 
-	*File << MeshTarget;
+	*File << Target;
 
 	File->Close();
 }
@@ -103,9 +121,9 @@ void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, 
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FStaticMesh MeshTarget = GetDataFromUStaticMesh(StaticMesh);
+	FStaticMesh_RE Target = GetDataFromUStaticMesh(StaticMesh);
 
-	*File << MeshTarget;
+	*File << Target;
 
 	File->Close();
 }
@@ -158,7 +176,7 @@ void UResourceExporterBP::ExportCameraBinary(const UObject* WorldContextObject, 
 
 	//UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
 
-	FCamera CamTarget;
+	FCamera_RE CamTarget;
 	FTransform Trans = CameraComponent->GetComponentToWorld();
 	CamTarget.Position = Trans.GetLocation();
 	CamTarget.Dir = CameraComponent->GetForwardVector();
@@ -280,7 +298,7 @@ void UResourceExporterBP::GetStaticMeshIndicesData(const UStaticMesh* StaticMesh
 	Output = Indices;
 }
 
-void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex>& Output)
+void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex_RE>& Output)
 {
 	if (!SkeletalMesh || !SkeletalMesh->GetResourceForRendering())
 	{
@@ -294,9 +312,10 @@ void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* Skele
 		{
 			//int32 UVChannelNum = VertexBuffers->StaticMeshVertexBuffer.GetNumTexCoords();
 
+			Output.Reset();
 			for (uint32 i = 0; i < VertexBuffers->PositionVertexBuffer.GetNumVertices(); i++)
 			{
-				FStaticVertex StaticVertex;
+				FStaticVertex_RE StaticVertex;
 
 				StaticVertex.Position = FVector(
 					VertexBuffers->PositionVertexBuffer.VertexPosition(i).X,
@@ -325,7 +344,7 @@ void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* Skele
 	}
 }
 
-void UResourceExporterBP::GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex>& Output)
+void UResourceExporterBP::GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex_RE>& Output)
 {
 	if (!SkeletalMesh || !SkeletalMesh->GetResourceForRendering())
 	{
@@ -335,10 +354,10 @@ void UResourceExporterBP::GetSkeletalMeshWeightVerticesData(const USkeletalMesh*
 	{
 		TArray<FSkinWeightInfo> WeightVertice;
 		SkeletalMesh->GetResourceForRendering()->LODRenderData[0].SkinWeightVertexBuffer.GetSkinWeights(WeightVertice);
-
+		Output.Reset();
 		for (int32 i = 0; i < WeightVertice.Num(); i++)
 		{
-			FSkinnedWeightVertex WeightVertex;
+			FSkinnedWeightVertex_RE WeightVertex;
 
 			for (auto j : WeightVertice[i].InfluenceBones)
 			{
@@ -362,21 +381,23 @@ void UResourceExporterBP::GetSkeletalMeshIndicesData(const USkeletalMesh* Skelet
 	}
 	if (SkeletalMesh->GetResourceForRendering()->LODRenderData.Num() > 0)
 	{
+		Output.Reset();
 		FMultiSizeIndexContainer IndexContainer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].MultiSizeIndexContainer;
 		IndexContainer.GetIndexBuffer(Output);
 	}
 }
 
-void UResourceExporterBP::GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint>& Output)
+void UResourceExporterBP::GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint_RE>& Output)
 {
 	if (!Skeleton)
 	{
 		return;
 	}
 
+	Output.Reset();
 	for (auto i : Skeleton->GetReferenceSkeleton().GetRawRefBoneInfo())
 	{
-		FJoint Joint;
+		FJoint_RE Joint;
 		Joint.Name = i.Name.ToString();
 		Joint.ParentIndex = i.ParentIndex;
 		Output.Add(Joint);
@@ -389,13 +410,68 @@ void UResourceExporterBP::GetSkeletonBindPoseData(const USkeleton* Skeleton, TAr
 	{
 		return;
 	}
-
+	Output.Reset();
 	Output = Skeleton->GetReferenceSkeleton().GetRawRefBonePose();
 }
 
-FStaticMesh UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
+void UResourceExporterBP::GetSequenceLengthData(UAnimSequence* Sequence, float& Output)
 {
-	FStaticMesh MeshTarget;
+	if (!Sequence)
+	{
+		return;
+	}
+
+	Output = Sequence->GetMaxCurrentTime();
+}
+
+void UResourceExporterBP::GetSequenceFrameNumData(const UAnimSequence* Sequence, uint32& Output)
+{
+	if (!Sequence)
+	{
+		return;
+	}
+
+	Output = Sequence->GetRawNumberOfFrames();
+}
+
+void UResourceExporterBP::GetSequenceTracksData(const UAnimSequence* Sequence, TArray<FTrack_RE>& Output)
+{
+	if (!Sequence)
+	{
+		return;
+	}
+
+	TArray<FRawAnimSequenceTrack> UETracks = Sequence->GetRawAnimationData();
+
+	Output.Reset();
+	for (auto i : UETracks)
+	{
+		FTrack_RE Track;
+		Track.Scales = i.ScaleKeys;
+		Track.Quaternions = i.RotKeys;
+		Track.Translations = i.PosKeys;
+
+		Output.Add(Track);
+	}
+}
+
+void UResourceExporterBP::GetSequenceTrackJointMapTableData(const UAnimSequence* Sequence, TArray<int32>& Output)
+{
+	if (!Sequence)
+	{
+		return;
+	}
+
+	Output.Reset();
+	for (auto i : Sequence->GetRawTrackToSkeletonMapTable())
+	{
+		Output.Add(i.BoneTreeIndex);
+	}
+}
+
+FStaticMesh_RE UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
+{
+	FStaticMesh_RE Target;
 	TArray<float> Vertices;
 	GetStaticMeshVerticesData(SM, Vertices);
 	TArray<int32> Indices;
@@ -403,43 +479,55 @@ FStaticMesh UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
 
 	for (int32 i = 0; i < Vertices.Num(); i++)
 	{
-		FStaticVertex OneVertex;
+		FStaticVertex_RE OneVertex;
 		OneVertex.Position = FVector(Vertices[i], Vertices[i + 1], Vertices[i + 2]);
 		OneVertex.TangentZ = FVector(Vertices[i + 3], Vertices[i + 4], Vertices[i + 5]);
 		OneVertex.UV0 = FVector2D(Vertices[i + 6], Vertices[i + 7]);
 		OneVertex.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-		MeshTarget.Vertice.Add(OneVertex); // TODO: push a stack obj or heap obj? will it be release? tried and found out it wont be release, but still dk is it correct.
+		Target.Vertice.Add(OneVertex); // TODO: push a stack obj or heap obj? will it be release? tried and found out it wont be release, but still dk is it correct.
 		i += 7;
 	}
-	MeshTarget.Indices = MoveTemp(Indices);
-	MeshTarget.VertStride = 48; // TODO: sth wrong with sizeof(FVector3), should get 56, but get 64. record: change to 48 becuz remove of uv1
+	Target.Indices = MoveTemp(Indices);
+	Target.VertStride = 48; // TODO: sth wrong with sizeof(FVector3), should get 56, but get 64. record: change to 48 becuz remove of uv1
 	////0.12.24.32.48.64.
 	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d.%d.%d.%d."), offsetof(FVertex, Position), offsetof(FVertex, TangentZ), offsetof(FVertex, UV0), offsetof(FVertex, UV1), offsetof(FVertex, Color));
 	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d"), sizeof(FVector), sizeof(FVector2D), sizeof(FVector4));
-	return MeshTarget;
+	return Target;
 }
 
-FSkeletalMesh UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh* SM)
+FSkeletalMesh_RE UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh* SM)
 {
-	FSkeletalMesh MeshTarget;
+	FSkeletalMesh_RE Target;
 
-	GetSkeletalMeshVerticesData(SM, MeshTarget.Vertice);
-	GetSkeletalMeshWeightVerticesData(SM, MeshTarget.SkinnedWeightVertice);
-	GetSkeletalMeshIndicesData(SM, MeshTarget.Indices);
-	MeshTarget.VertStride = 48;
+	GetSkeletalMeshVerticesData(SM, Target.Vertice);
+	GetSkeletalMeshWeightVerticesData(SM, Target.SkinnedWeightVertice);
+	GetSkeletalMeshIndicesData(SM, Target.Indices);
+	Target.VertStride = 48;
 
-	return MeshTarget;
+	return Target;
 }
 
 RE::FSkeleton_RE UResourceExporterBP::GetDataFromUSkeleton(const USkeleton* Sk)
 {
-	FSkeleton_RE MeshTarget;
+	FSkeleton_RE Target;
 
-	GetSkeletonJointsData(Sk, MeshTarget.Joints);
-	GetSkeletonBindPoseData(Sk, MeshTarget.BindPose);
+	GetSkeletonJointsData(Sk, Target.Joints);
+	GetSkeletonBindPoseData(Sk, Target.BindPose);
 
-	return MeshTarget;
+	return Target;
+}
+
+RE::FSequence_RE UResourceExporterBP::GetDataFromUAnimSequence(UAnimSequence* Se)
+{
+	FSequence_RE Target;
+
+	GetSequenceLengthData(Se, Target.SequenceLength);
+	GetSequenceFrameNumData(Se, Target.NumFrames);
+	GetSequenceTracksData(Se, Target.JointTracks);
+	GetSequenceTrackJointMapTableData(Se, Target.TrackToJointIndexMapTable);
+
+	return Target;
 }
 
 void UResourceExporterBP::ExportSMDataByJsonObj(const TArray<FVertexStruct>& Vertices, const TArray<int32>& Indices, FString OutputPath, const FString& Filename)
