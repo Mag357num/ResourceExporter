@@ -8,58 +8,47 @@
 #include "Kismet/GameplayStatics.h"
 #include "JsonObjectConverter.h"
 #include "Serialization/Archive.h"
+#include "Rendering/SkeletalMeshRenderData.h"
 
 typedef TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriter;
 typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriterFactory;
 
 DEFINE_LOG_CATEGORY_STATIC(LogResExporter, Log, All);
 
-FArchive& operator<<(FArchive& Ar, FVertexBinData& Value)
+void UResourceExporterBP::ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletonBinary_")*/)
 {
-	Ar << Value.Position;
-	Ar << Value.TangentZ;
-	Ar << Value.UV0;
-	Ar << Value.Color;
-	return Ar;
+	//if (OutputPath.IsEmpty())
+	//{
+	//	OutputPath = FPaths::ProfilingDir();
+	//}
+
+	//FString Fullname = OutputPath + Filename + TEXT(".dat");
+	//const TCHAR* FullnameTCHAR = *Fullname;
+	//FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	//FSkeletalMesh MeshTarget = GetDataFromUSkeleton(Skeleton);
+
+	//*File << MeshTarget;
+
+	//File->Close();
 }
 
-FArchive& operator<<(FArchive& Ar, FMeshBinData& Value)
+void UResourceExporterBP::ExportSkeletalMeshBinary(const USkeletalMesh* SkeletalMesh, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletalMeshBinary_")*/)
 {
-	Ar << Value.VertStride;
-	Ar << Value.Vertice;
-	Ar << Value.Indices;
-	return Ar;
-}
+	if (OutputPath.IsEmpty())
+	{
+		OutputPath = FPaths::ProfilingDir();
+	}
 
-FArchive& operator<<(FArchive& Ar, FCameraBinData& Value)
-{
-	Ar << Value.Position;
-	Ar << Value.Dir;
-	Ar << Value.Rotator;
-	Ar << Value.Fov;
-	Ar << Value.Aspect;
-	return Ar;
-}
+	FString Fullname = OutputPath + Filename + TEXT(".dat");
+	const TCHAR* FullnameTCHAR = *Fullname;
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-FArchive& operator<<(FArchive& Ar, FMeshTransfrom& Value)
-{
-	Ar << Value.Translation;
-	Ar << Value.Quat;
-	Ar << Value.Scale;
-	return Ar;
-}
+	FSkeletalMesh MeshTarget = GetDataFromUSkeletalMesh(SkeletalMesh);
 
-FArchive& operator<<(FArchive& Ar, FMeshActorBinData& Value)
-{
-	Ar << Value.MeshActor;
-	Ar << Value.MeshTrans;
-	return Ar;
-}
+	*File << MeshTarget;
 
-FArchive& operator<<(FArchive& Ar, FSceneBinData& Value)
-{
-	Ar << Value.MeshActors;
-	return Ar;
+	File->Close();
 }
 
 void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("Scene_")*/)
@@ -82,7 +71,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 	{
 		if (!Actor->ActorHasTag(ShowInScene)) { continue; }
 
-		FMeshActorBinData Indiv;
+		FMeshActor Indiv;
 		UActorComponent* ActCom = Actor->GetComponentByClass(UStaticMeshComponent::StaticClass());
 		if (UStaticMeshComponent* SMCom = Cast<UStaticMeshComponent>(ActCom))
 		{
@@ -93,7 +82,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 			Indiv.MeshTrans.Scale = Trans.GetScale3D();
 
 			UStaticMesh* SM = SMCom->GetStaticMesh();
-			Indiv.MeshActor = GetMeshBinDataFromUStaticMesh(SM);
+			Indiv.MeshActor = GetDataFromUStaticMesh(SM);
 
 			SceneOutput.MeshActors.Add(Indiv);
 		}
@@ -114,7 +103,7 @@ void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, 
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FMeshBinData MeshTarget = GetMeshBinDataFromUStaticMesh(StaticMesh);
+	FStaticMesh MeshTarget = GetDataFromUStaticMesh(StaticMesh);
 
 	*File << MeshTarget;
 
@@ -124,10 +113,10 @@ void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, 
 void UResourceExporterBP::ExportStaticMesh(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
 {
 	TArray<float> Vertices;
-	GetVerticesData(StaticMesh, Vertices);
+	GetStaticMeshVerticesData(StaticMesh, Vertices);
 
 	TArray<int32> Indices;
-	GetIndicesData(StaticMesh, Indices);
+	GetStaticMeshIndicesData(StaticMesh, Indices);
 
 	FStaticMeshData Data(Vertices, Indices);
 
@@ -169,7 +158,7 @@ void UResourceExporterBP::ExportCameraBinary(const UObject* WorldContextObject, 
 
 	//UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
 
-	FCameraBinData CamTarget;
+	FCamera CamTarget;
 	FTransform Trans = CameraComponent->GetComponentToWorld();
 	CamTarget.Position = Trans.GetLocation();
 	CamTarget.Dir = CameraComponent->GetForwardVector();
@@ -223,7 +212,7 @@ void UResourceExporterBP::ExportAllCameras(const UObject* WorldContextObject, FS
 	ExportStructByJsonConverter(Data, OutputPath, Filename);
 }
 
-void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output)
+void UResourceExporterBP::GetStaticMeshVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output)
 {
 	TArray<float> Vertices;
 
@@ -266,7 +255,7 @@ void UResourceExporterBP::GetVerticesData(const UStaticMesh* StaticMesh, TArray<
 	Output = Vertices;
 }
 
-void UResourceExporterBP::GetIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output)
+void UResourceExporterBP::GetStaticMeshIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output)
 {
 	TArray<int32> Indices = TArray<int32>();
 
@@ -291,17 +280,104 @@ void UResourceExporterBP::GetIndicesData(const UStaticMesh* StaticMesh, TArray<i
 	Output = Indices;
 }
 
-FMeshBinData UResourceExporterBP::GetMeshBinDataFromUStaticMesh(const UStaticMesh* SM)
+void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex>& Output)
 {
-	FMeshBinData MeshTarget;
+	if (!SkeletalMesh || !SkeletalMesh->GetResourceForRendering())
+	{
+		return;
+	}
+	if (SkeletalMesh->GetResourceForRendering()->LODRenderData.Num() > 0)
+	{
+		const FStaticMeshVertexBuffers* VertexBuffers = &SkeletalMesh->GetResourceForRendering()->LODRenderData[0].StaticVertexBuffers;
+
+		if (VertexBuffers)
+		{
+			//int32 UVChannelNum = VertexBuffers->StaticMeshVertexBuffer.GetNumTexCoords();
+
+			for (uint32 i = 0; i < VertexBuffers->PositionVertexBuffer.GetNumVertices(); i++)
+			{
+				FStaticVertex StaticVertex;
+
+				StaticVertex.Position = FVector(
+					VertexBuffers->PositionVertexBuffer.VertexPosition(i).X,
+					VertexBuffers->PositionVertexBuffer.VertexPosition(i).Y,
+					VertexBuffers->PositionVertexBuffer.VertexPosition(i).Z
+				);
+
+				StaticVertex.TangentZ = FVector(
+					VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).X,
+					VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).Y,
+					VertexBuffers->StaticMeshVertexBuffer.VertexTangentZ(i).Z
+				);
+
+				StaticVertex.UV0 = FVector2D(
+					VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0).X,
+					VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0).Y
+				);
+
+				Output.Add(StaticVertex);
+			}
+		}
+		else
+		{
+			return;
+		}
+	}
+}
+
+void UResourceExporterBP::GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex>& Output)
+{
+	if (!SkeletalMesh || !SkeletalMesh->GetResourceForRendering())
+	{
+		return;
+	}
+	if (SkeletalMesh->GetResourceForRendering()->LODRenderData.Num() > 0)
+	{
+		TArray<FSkinWeightInfo> WeightVertice;
+		SkeletalMesh->GetResourceForRendering()->LODRenderData[0].SkinWeightVertexBuffer.GetSkinWeights(WeightVertice);
+
+		for (int32 i = 0; i < WeightVertice.Num(); i++)
+		{
+			FSkinnedWeightVertex WeightVertex;
+
+			for (auto j : WeightVertice[i].InfluenceBones)
+			{
+				WeightVertex.InfluJointIndice.Add(j);
+			}
+
+			for (auto j : WeightVertice[i].InfluenceWeights)
+			{
+				WeightVertex.InfluJointWeights.Add(j);
+			}
+			Output.Add(WeightVertex);
+		}
+	}
+}
+
+void UResourceExporterBP::GetSkeletalMeshIndicesData(const USkeletalMesh* SkeletalMesh, TArray<uint32>& Output)
+{
+	if (!SkeletalMesh || !SkeletalMesh->GetResourceForRendering())
+	{
+		return;
+	}
+	if (SkeletalMesh->GetResourceForRendering()->LODRenderData.Num() > 0)
+	{
+		FMultiSizeIndexContainer IndexContainer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].MultiSizeIndexContainer;
+		IndexContainer.GetIndexBuffer(Output);
+	}
+}
+
+FStaticMesh UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
+{
+	FStaticMesh MeshTarget;
 	TArray<float> Vertices;
-	GetVerticesData(SM, Vertices);
+	GetStaticMeshVerticesData(SM, Vertices);
 	TArray<int32> Indices;
-	GetIndicesData(SM, Indices);
+	GetStaticMeshIndicesData(SM, Indices);
 
 	for (int32 i = 0; i < Vertices.Num(); i++)
 	{
-		FVertexBinData OneVertex;
+		FStaticVertex OneVertex;
 		OneVertex.Position = FVector(Vertices[i], Vertices[i + 1], Vertices[i + 2]);
 		OneVertex.TangentZ = FVector(Vertices[i + 3], Vertices[i + 4], Vertices[i + 5]);
 		OneVertex.UV0 = FVector2D(Vertices[i + 6], Vertices[i + 7]);
@@ -315,6 +391,18 @@ FMeshBinData UResourceExporterBP::GetMeshBinDataFromUStaticMesh(const UStaticMes
 	////0.12.24.32.48.64.
 	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d.%d.%d.%d."), offsetof(FVertex, Position), offsetof(FVertex, TangentZ), offsetof(FVertex, UV0), offsetof(FVertex, UV1), offsetof(FVertex, Color));
 	//UE_LOG(LogTemp, Warning, TEXT("%d.%d.%d"), sizeof(FVector), sizeof(FVector2D), sizeof(FVector4));
+	return MeshTarget;
+}
+
+FSkeletalMesh UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh* SM)
+{
+	FSkeletalMesh MeshTarget;
+
+	GetSkeletalMeshVerticesData(SM, MeshTarget.Vertice);
+	GetSkeletalMeshWeightVerticesData(SM, MeshTarget.SkinnedWeightVertice);
+	GetSkeletalMeshIndicesData(SM, MeshTarget.Indices);
+	MeshTarget.VertStride = 48;
+
 	return MeshTarget;
 }
 

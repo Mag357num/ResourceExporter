@@ -9,6 +9,8 @@
 
 #include "ResourceExporterBP.generated.h"
 
+using namespace RE;
+
 /**
  * 
  */
@@ -18,6 +20,12 @@ class RESOURCEEXPORTER_API UResourceExporterBP : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
+	static void ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletonBinary_"));
+
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
+	static void ExportSkeletalMeshBinary(const USkeletalMesh* SkeletalMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletalMeshBinary_"));
+
 	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
 	static void ExportSceneBinary(const UObject* WorldContextObject, FString OutputPath = TEXT(""), const FString& Filename = TEXT("Scene_"));
 
@@ -45,11 +53,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void WriteFile(const FString& FileString, FString OutputPath, const FString& Filename);
 
+	// get staticmesh vertex
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
-	static void GetVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output);
+	static void GetStaticMeshVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output);
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
-	static void GetIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output);
+	static void GetStaticMeshIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output);
 
 	template <typename TargetStruct>
 	static void ExportStructByJsonConverter(const TargetStruct& Target, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleStaticMesh_"))
@@ -59,5 +68,12 @@ public:
 		WriteFile(OutputString, OutputPath, Filename);
 	}
 private:
-	static FMeshBinData GetMeshBinDataFromUStaticMesh(const UStaticMesh* SM);
+	static FStaticMesh GetDataFromUStaticMesh(const UStaticMesh* SM);
+	static FSkeletalMesh GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
+	static FSkeleton GetDataFromUSkeleton(const USkeleton* Sk);
+
+	// get skeletalmesh vertex
+	static void GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex>& Output);
+	static void GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex>& Output);
+	static void GetSkeletalMeshIndicesData(const USkeletalMesh* SkeletalMesh, TArray<uint32>& Output);
 };

@@ -4,54 +4,91 @@
 
 #include "CoreMinimal.h"
 
-/**
- * 
- */
-class RESOURCEEXPORTER_API OutputSupportTypes
+namespace RE
 {
-public:
-	OutputSupportTypes();
-	~OutputSupportTypes();
-};
+	struct FJoint
+	{
+		FString Name;
+		int32 ParentIndex;
+	};
 
-struct FVertexBinData
-{
-	FVector Position;
-	FVector TangentZ;
-	FVector2D UV0;
-	FVector4 Color;
-}; // sizeof(FVertex) 的问题?
+	struct FStaticVertex
+	{
+		FVector Position;
+		FVector TangentZ;
+		FVector2D UV0;
+		FVector4 Color;
+	}; // TODO:sizeof(FVertex) 的问题?
 
-struct FMeshBinData
-{
-	int32 VertStride;
-	TArray<FVertexBinData> Vertice;
-	TArray<int32> Indices;
-};
+	struct FStaticMesh
+	{
+		int32 VertStride;
+		TArray<FStaticVertex> Vertice;
+		TArray<int32> Indices;
+	};
 
-struct FCameraBinData
-{
-	FVector Position;
-	FVector Dir;
-	FVector Rotator;
-	float Fov;
-	float Aspect;
-};
+	struct FSkinnedWeightVertex
+	{
+		TArray<int16> InfluJointIndice;
+		TArray<int8> InfluJointWeights;
+	};
 
-struct FMeshTransfrom
-{
-	FVector Translation;
-	FQuat Quat;
-	FVector Scale;
-};
+	struct FSkeletalMesh
+	{
+		int32 VertStride;
+		TArray<FStaticVertex> Vertice;
+		TArray<FSkinnedWeightVertex> SkinnedWeightVertice;
+		TArray<uint32> Indices;
+	};
 
-struct FMeshActorBinData
-{
-	FMeshBinData MeshActor;
-	FMeshTransfrom MeshTrans;
-};
+	struct FSkeleton
+	{
+		TArray<FJoint> Joints;
+		TArray<FTransform> BindPose;
+	};
 
-struct FSceneBinData
-{
-	TArray<FMeshActorBinData> MeshActors;
-};
+	struct FCamera
+	{
+		FVector Position;
+		FVector Dir;
+		FVector Rotator;
+		float Fov;
+		float Aspect;
+	};
+
+	struct FMeshTransfrom
+	{
+		FVector Translation;
+		FQuat Quat;
+		FVector Scale;
+	};
+
+	struct FMeshActor
+	{
+		FStaticMesh MeshActor;
+		FMeshTransfrom MeshTrans;
+	};
+
+	struct FSceneBinData
+	{
+		TArray<FMeshActor> MeshActors;
+	};
+
+	FArchive& operator<<(FArchive& Ar, FJoint& Value);
+
+	FArchive& operator<<(FArchive& Ar, FStaticVertex& Value);
+
+	FArchive& operator<<(FArchive& Ar, FSkinnedWeightVertex& Value);
+
+	FArchive& operator<<(FArchive& Ar, FStaticMesh& Value);
+
+	FArchive& operator<<(FArchive& Ar, FSkeletalMesh& Value);
+
+	FArchive& operator<<(FArchive& Ar, FCamera& Value);
+
+	FArchive& operator<<(FArchive& Ar, FMeshTransfrom& Value);
+
+	FArchive& operator<<(FArchive& Ar, FMeshActor& Value);
+
+	FArchive& operator<<(FArchive& Ar, FSceneBinData& Value);
+}
