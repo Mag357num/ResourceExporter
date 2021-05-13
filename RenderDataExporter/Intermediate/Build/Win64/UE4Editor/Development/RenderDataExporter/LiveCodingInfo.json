@@ -1,0 +1,17 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.RenderDataExporter.cpp.obj": [
+			"MaterialExporterData.cpp.obj",
+			"RenderDataExporter.cpp.obj",
+			"RenderDataExporterBPLibrary.cpp.obj",
+			"RenderDataExporterSettings.cpp.obj"
+		],
+		"Module.RenderDataExporter.gen.cpp.obj": [
+			"MaterialExporterData.gen.cpp.obj",
+			"RenderDataExporter.init.gen.cpp.obj",
+			"RenderDataExporterBPLibrary.gen.cpp.obj",
+			"RenderDataExporterSettings.gen.cpp.obj"
+		]
+	}
+}

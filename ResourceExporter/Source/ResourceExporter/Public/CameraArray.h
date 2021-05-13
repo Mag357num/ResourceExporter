@@ -17,5 +17,5 @@ struct RESOURCEEXPORTER_API FCameraArray
 
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
-	TArray<FCameraData> Cameras;
+	TArray<FCameraInfo> Cameras;
 };

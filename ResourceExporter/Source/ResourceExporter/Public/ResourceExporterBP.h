@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "StaticMeshData.h"
+#include "OutputSupportTypes.h"
 
 #include "ResourceExporterBP.generated.h"
 
@@ -17,8 +18,8 @@ class RESOURCEEXPORTER_API UResourceExporterBP : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 
 public:
-	//UFUNCTION(BlueprintCallable, Category = "ResExport")
-	//static void ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
+	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
+	static void ExportSceneBinary(const UObject* WorldContextObject, FString OutputPath = TEXT(""), const FString& Filename = TEXT("Scene_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
@@ -38,16 +39,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
 	static void ExportCamera(const UObject* WorldContextObject, const UCameraComponent* CameraComponent, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleCameraData_"));
 
-	UFUNCTION(BlueprintCallable, Category = "Camera", meta = (WorldContext = WorldContextObject))
+	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
 	static void ExportAllCameras(const UObject* WorldContextObject, FString OutputPath = TEXT(""), const FString& Filename = TEXT("AllCameraData_"));
 
-	UFUNCTION(BlueprintCallable, Category = "IO")
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void WriteFile(const FString& FileString, FString OutputPath, const FString& Filename);
 
-	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void GetVerticesData(const UStaticMesh* StaticMesh, TArray<float>& Output);
 
-	UFUNCTION(BlueprintCallable, Category = "StaticMesh")
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void GetIndicesData(const UStaticMesh* StaticMesh, TArray<int32>& Output);
 
 	template <typename TargetStruct>
@@ -57,4 +58,6 @@ public:
 		FJsonObjectConverter::UStructToJsonObjectString(Target, OutputString);
 		WriteFile(OutputString, OutputPath, Filename);
 	}
+private:
+	static FMeshBinData GetMeshBinDataFromUStaticMesh(const UStaticMesh* SM);
 };

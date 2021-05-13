@@ -1,0 +1,15 @@
+/ResourceExporter/Binaries/Win64/*.pdb
+/ResourceExporter/Binaries/Win64/*.dll
+/ResourceExporter/Binaries/Win64/*.modules
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.res
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.h
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.json
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.cpp
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.obj
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.response
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.old
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.txt
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.exp
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Development/ResourceExporter/*.lib
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Inc/ResourceExporter/*.cpp
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/Inc/ResourceExporter/*.h

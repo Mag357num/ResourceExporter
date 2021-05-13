@@ -11,7 +11,7 @@
  *
  */
 USTRUCT(BlueprintType)
-struct RESOURCEEXPORTER_API FCameraData
+struct RESOURCEEXPORTER_API FCameraInfo
 {
 	GENERATED_BODY()
 
@@ -32,5 +32,5 @@ public:
 	float Aspect;
 
 public:
-	FCameraData() : Location(FVector()), Target(FVector()), Rotator(FVector()), Fov(0.f), Aspect(0.f) {}
+	FCameraInfo() : Location(FVector()), Target(FVector()), Rotator(FVector()), Fov(0.f), Aspect(0.f) {}
 };
