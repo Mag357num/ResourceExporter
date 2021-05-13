@@ -382,8 +382,7 @@ void UResourceExporterBP::GetSkeletalMeshIndicesData(const USkeletalMesh* Skelet
 	if (SkeletalMesh->GetResourceForRendering()->LODRenderData.Num() > 0)
 	{
 		Output.Reset();
-		FMultiSizeIndexContainer IndexContainer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].MultiSizeIndexContainer;
-		IndexContainer.GetIndexBuffer(Output);
+		SkeletalMesh->GetResourceForRendering()->LODRenderData[0].MultiSizeIndexContainer.GetIndexBuffer(Output);
 	}
 }
 
