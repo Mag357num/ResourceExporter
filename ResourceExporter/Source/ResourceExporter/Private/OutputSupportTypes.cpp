@@ -64,7 +64,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FSceneBinData& Value)
+	FArchive& operator<<(FArchive& Ar, FScene_RE& Value)
 	{
 		Ar << Value.MeshActors;
 		return Ar;
@@ -74,6 +74,13 @@ namespace RE
 	{
 		Ar << Value.Name;
 		Ar << Value.ParentIndex;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FSkeleton_RE& Value)
+	{
+		Ar << Value.Joints;
+		Ar << Value.BindPose;
 		return Ar;
 	}
 

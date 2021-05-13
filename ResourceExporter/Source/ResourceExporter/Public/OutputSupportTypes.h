@@ -41,7 +41,7 @@ namespace RE
 		TArray<uint32> Indices;
 	};
 
-	struct FSkeleton
+	struct FSkeleton_RE
 	{
 		TArray<FJoint> Joints;
 		TArray<FTransform> BindPose;
@@ -56,7 +56,7 @@ namespace RE
 		float Aspect;
 	};
 
-	struct FMeshTransfrom
+	struct FMeshTransfrom // TODO: change to use FTransform
 	{
 		FVector Translation;
 		FQuat Quat;
@@ -69,7 +69,7 @@ namespace RE
 		FMeshTransfrom MeshTrans;
 	};
 
-	struct FSceneBinData
+	struct FScene_RE
 	{
 		TArray<FMeshActor> MeshActors;
 	};
@@ -90,5 +90,7 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FMeshActor& Value);
 
-	FArchive& operator<<(FArchive& Ar, FSceneBinData& Value);
+	FArchive& operator<<(FArchive& Ar, FScene_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FSkeleton_RE& Value);
 }

@@ -17,20 +17,20 @@ DEFINE_LOG_CATEGORY_STATIC(LogResExporter, Log, All);
 
 void UResourceExporterBP::ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletonBinary_")*/)
 {
-	//if (OutputPath.IsEmpty())
-	//{
-	//	OutputPath = FPaths::ProfilingDir();
-	//}
+	if (OutputPath.IsEmpty())
+	{
+		OutputPath = FPaths::ProfilingDir();
+	}
 
-	//FString Fullname = OutputPath + Filename + TEXT(".dat");
-	//const TCHAR* FullnameTCHAR = *Fullname;
-	//FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+	FString Fullname = OutputPath + Filename + TEXT(".dat");
+	const TCHAR* FullnameTCHAR = *Fullname;
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	//FSkeletalMesh MeshTarget = GetDataFromUSkeleton(Skeleton);
+	FSkeleton_RE MeshTarget = GetDataFromUSkeleton(Skeleton);
 
-	//*File << MeshTarget;
+	*File << MeshTarget;
 
-	//File->Close();
+	File->Close();
 }
 
 void UResourceExporterBP::ExportSkeletalMeshBinary(const USkeletalMesh* SkeletalMesh, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletalMeshBinary_")*/)
@@ -62,7 +62,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
-	FSceneBinData SceneOutput;
+	FScene_RE SceneOutput;
 	TArray<AActor*> Actors; 
 	FName ShowInScene(TEXT("ShowInScene"));
 
@@ -367,6 +367,32 @@ void UResourceExporterBP::GetSkeletalMeshIndicesData(const USkeletalMesh* Skelet
 	}
 }
 
+void UResourceExporterBP::GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint>& Output)
+{
+	if (!Skeleton)
+	{
+		return;
+	}
+
+	for (auto i : Skeleton->GetReferenceSkeleton().GetRawRefBoneInfo())
+	{
+		FJoint Joint;
+		Joint.Name = i.Name.ToString();
+		Joint.ParentIndex = i.ParentIndex;
+		Output.Add(Joint);
+	}
+}
+
+void UResourceExporterBP::GetSkeletonBindPoseData(const USkeleton* Skeleton, TArray<FTransform>& Output)
+{
+	if (!Skeleton)
+	{
+		return;
+	}
+
+	Output = Skeleton->GetReferenceSkeleton().GetRawRefBonePose();
+}
+
 FStaticMesh UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
 {
 	FStaticMesh MeshTarget;
@@ -402,6 +428,16 @@ FSkeletalMesh UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh*
 	GetSkeletalMeshWeightVerticesData(SM, MeshTarget.SkinnedWeightVertice);
 	GetSkeletalMeshIndicesData(SM, MeshTarget.Indices);
 	MeshTarget.VertStride = 48;
+
+	return MeshTarget;
+}
+
+RE::FSkeleton_RE UResourceExporterBP::GetDataFromUSkeleton(const USkeleton* Sk)
+{
+	FSkeleton_RE MeshTarget;
+
+	GetSkeletonJointsData(Sk, MeshTarget.Joints);
+	GetSkeletonBindPoseData(Sk, MeshTarget.BindPose);
 
 	return MeshTarget;
 }

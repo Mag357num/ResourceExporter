@@ -70,10 +70,14 @@ public:
 private:
 	static FStaticMesh GetDataFromUStaticMesh(const UStaticMesh* SM);
 	static FSkeletalMesh GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
-	static FSkeleton GetDataFromUSkeleton(const USkeleton* Sk);
+	static FSkeleton_RE GetDataFromUSkeleton(const USkeleton* Sk);
 
-	// get skeletalmesh vertex
+	// get skeletalmesh
 	static void GetSkeletalMeshVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FStaticVertex>& Output);
 	static void GetSkeletalMeshWeightVerticesData(const USkeletalMesh* SkeletalMesh, TArray<FSkinnedWeightVertex>& Output);
 	static void GetSkeletalMeshIndicesData(const USkeletalMesh* SkeletalMesh, TArray<uint32>& Output);
+
+	// get skeleton
+	static void GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint>& Output);
+	static void GetSkeletonBindPoseData(const USkeleton* Skeleton, TArray<FTransform>& Output);
 };
