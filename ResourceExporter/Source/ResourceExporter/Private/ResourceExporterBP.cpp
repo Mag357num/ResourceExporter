@@ -51,7 +51,7 @@ void UResourceExporterBP::ExportSkeletonBinary(const USkeleton* Skeleton, FStrin
 	File->Close();
 }
 
-void UResourceExporterBP::ExportSkeletalMeshBinary(const USkeletalMesh* SkeletalMesh, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletalMeshBinary_")*/)
+void UResourceExporterBP::ExportSkeletalMesh_Lod0_Binary(const USkeletalMesh* SkeletalMesh, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("SkeletalMeshBinary_")*/)
 {
 	if (OutputPath.IsEmpty())
 	{
@@ -62,7 +62,7 @@ void UResourceExporterBP::ExportSkeletalMeshBinary(const USkeletalMesh* Skeletal
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FSkeletalMesh_RE Target = GetDataFromUSkeletalMesh(SkeletalMesh);
+	FSkeletalMesh_Lod_RE Target = GetDataFromUSkeletalMesh(SkeletalMesh);
 
 	*File << Target;
 
@@ -89,7 +89,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 	{
 		if (!Actor->ActorHasTag(ShowInScene)) { continue; }
 
-		FMeshActor Indiv;
+		FStaticMeshComponent_RE Indiv;
 		UActorComponent* ActCom = Actor->GetComponentByClass(UStaticMeshComponent::StaticClass());
 		if (UStaticMeshComponent* SMCom = Cast<UStaticMeshComponent>(ActCom))
 		{
@@ -100,7 +100,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 			Indiv.MeshTrans.Scale = Trans.GetScale3D();
 
 			UStaticMesh* SM = SMCom->GetStaticMesh();
-			Indiv.MeshActor = GetDataFromUStaticMesh(SM);
+			Indiv.StaticMesh = GetDataFromUStaticMesh(SM);
 
 			SceneOutput.MeshActors.Add(Indiv);
 		}
@@ -110,7 +110,7 @@ void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, F
 	File->Close();
 }
 
-void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
+void UResourceExporterBP::ExportStaticMesh_Lod0_Binary(const UStaticMesh* StaticMesh, FString Path, const FString& Filename)
 {
 	if (Path.IsEmpty())
 	{
@@ -121,7 +121,7 @@ void UResourceExporterBP::ExportStaticMeshBinary(const UStaticMesh* StaticMesh, 
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FStaticMesh_RE Target = GetDataFromUStaticMesh(StaticMesh);
+	FStaticMesh_Lod_RE Target = GetDataFromUStaticMesh(StaticMesh);
 
 	*File << Target;
 
@@ -334,6 +334,8 @@ void UResourceExporterBP::GetSkeletalMeshVerticesData(const USkeletalMesh* Skele
 					VertexBuffers->StaticMeshVertexBuffer.GetVertexUV(i, 0).Y
 				);
 
+				StaticVertex.Color = FVector4(1.f, 1.f, 1.f, 1.f);
+
 				Output.Add(StaticVertex);
 			}
 		}
@@ -468,9 +470,9 @@ void UResourceExporterBP::GetSequenceTrackJointMapTableData(const UAnimSequence*
 	}
 }
 
-FStaticMesh_RE UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
+FStaticMesh_Lod_RE UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
 {
-	FStaticMesh_RE Target;
+	FStaticMesh_Lod_RE Target;
 	TArray<float> Vertices;
 	GetStaticMeshVerticesData(SM, Vertices);
 	TArray<int32> Indices;
@@ -495,14 +497,14 @@ FStaticMesh_RE UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM
 	return Target;
 }
 
-FSkeletalMesh_RE UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh* SM)
+FSkeletalMesh_Lod_RE UResourceExporterBP::GetDataFromUSkeletalMesh(const USkeletalMesh* SM)
 {
-	FSkeletalMesh_RE Target;
+	FSkeletalMesh_Lod_RE Target;
 
+	Target.VertStride = 48;
 	GetSkeletalMeshVerticesData(SM, Target.Vertice);
 	GetSkeletalMeshWeightVerticesData(SM, Target.SkinnedWeightVertice);
 	GetSkeletalMeshIndicesData(SM, Target.Indices);
-	Target.VertStride = 48;
 
 	return Target;
 }

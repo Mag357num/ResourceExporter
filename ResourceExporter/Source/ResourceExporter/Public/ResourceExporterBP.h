@@ -27,13 +27,13 @@ public:
 	static void ExportSkeletonBinary(const USkeleton* Skeleton, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletonBinary_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
-	static void ExportSkeletalMeshBinary(const USkeletalMesh* SkeletalMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletalMeshBinary_"));
+	static void ExportSkeletalMesh_Lod0_Binary(const USkeletalMesh* SkeletalMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SkeletalMeshBinary_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport", meta = (WorldContext = WorldContextObject))
 	static void ExportSceneBinary(const UObject* WorldContextObject, FString OutputPath = TEXT(""), const FString& Filename = TEXT("Scene_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
-	static void ExportStaticMeshBinary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
+	static void ExportStaticMesh_Lod0_Binary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportStaticMesh(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("SingleStaticMesh_"));
@@ -71,8 +71,8 @@ public:
 		WriteFile(OutputString, OutputPath, Filename);
 	}
 private:
-	static FStaticMesh_RE GetDataFromUStaticMesh(const UStaticMesh* SM);
-	static FSkeletalMesh_RE GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
+	static FStaticMesh_Lod_RE GetDataFromUStaticMesh(const UStaticMesh* SM);
+	static FSkeletalMesh_Lod_RE GetDataFromUSkeletalMesh(const USkeletalMesh* SM);
 	static FSkeleton_RE GetDataFromUSkeleton(const USkeleton* Sk);
 	static FSequence_RE GetDataFromUAnimSequence(UAnimSequence* Se);
 

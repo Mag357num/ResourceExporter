@@ -22,7 +22,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FStaticMesh_RE& Value)
+	FArchive& operator<<(FArchive& Ar, FStaticMesh_Lod_RE& Value)
 	{
 		Ar << Value.VertStride;
 		Ar << Value.Vertice;
@@ -30,7 +30,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FSkeletalMesh_RE& Value)
+	FArchive& operator<<(FArchive& Ar, FSkeletalMesh_Lod_RE& Value)
 	{
 		Ar << Value.VertStride;
 		Ar << Value.Vertice;
@@ -57,9 +57,9 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FMeshActor& Value)
+	FArchive& operator<<(FArchive& Ar, FStaticMeshComponent_RE& Value)
 	{
-		Ar << Value.MeshActor;
+		Ar << Value.StaticMesh;
 		Ar << Value.MeshTrans;
 		return Ar;
 	}

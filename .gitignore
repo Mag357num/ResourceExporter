@@ -22,6 +22,7 @@
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.json
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.cpp
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.obj
+/ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/.*.obj
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.response
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.old
 /ResourceExporter/Intermediate/Build/Win64/UE4Editor/DebugGame/ResourceExporter/*.txt

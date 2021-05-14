@@ -14,7 +14,7 @@ namespace RE
 		FVector4 Color;
 	}; // TODO:sizeof(FVertex) 的问题?
 
-	struct FStaticMesh_RE
+	struct FStaticMesh_Lod_RE
 	{
 		int32 VertStride;
 		TArray<FStaticVertex_RE> Vertice;
@@ -27,7 +27,7 @@ namespace RE
 		TArray<int8> InfluJointWeights;
 	};
 
-	struct FSkeletalMesh_RE
+	struct FSkeletalMesh_Lod_RE
 	{
 		int32 VertStride;
 		TArray<FStaticVertex_RE> Vertice;
@@ -78,15 +78,15 @@ namespace RE
 		FVector Scale;
 	};
 
-	struct FMeshActor
+	struct FStaticMeshComponent_RE
 	{
-		FStaticMesh_RE MeshActor;
+		FStaticMesh_Lod_RE StaticMesh;
 		FMeshTransfrom MeshTrans;
 	};
 
 	struct FScene_RE
 	{
-		TArray<FMeshActor> MeshActors;
+		TArray<FStaticMeshComponent_RE> MeshActors;
 	};
 
 	FArchive& operator<<(FArchive& Ar, FJoint_RE& Value);
@@ -95,15 +95,15 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FSkinnedWeightVertex_RE& Value);
 
-	FArchive& operator<<(FArchive& Ar, FStaticMesh_RE& Value);
+	FArchive& operator<<(FArchive& Ar, FStaticMesh_Lod_RE& Value);
 
-	FArchive& operator<<(FArchive& Ar, FSkeletalMesh_RE& Value);
+	FArchive& operator<<(FArchive& Ar, FSkeletalMesh_Lod_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FCamera_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FMeshTransfrom& Value);
 
-	FArchive& operator<<(FArchive& Ar, FMeshActor& Value);
+	FArchive& operator<<(FArchive& Ar, FStaticMeshComponent_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FScene_RE& Value);
 
