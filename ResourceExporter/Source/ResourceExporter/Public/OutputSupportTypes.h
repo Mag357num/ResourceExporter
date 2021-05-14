@@ -23,13 +23,13 @@ namespace RE
 
 	struct FSkinnedWeightVertex_RE
 	{
-		TArray<int16> InfluJointIndice;
-		TArray<int8> InfluJointWeights;
+		TArray<uint16> InfluJointIndice;
+		TArray<uint8> InfluJointWeights;
 	};
 
 	struct FSkeletalMesh_Lod_RE
 	{
-		int32 VertStride;
+		uint32 VertStride;
 		TArray<FStaticVertex_RE> Vertice;
 		TArray<FSkinnedWeightVertex_RE> SkinnedWeightVertice;
 		TArray<uint32> Indices;
@@ -45,6 +45,7 @@ namespace RE
 	{
 		TArray<FJoint_RE> Joints;
 		TArray<FTransform> BindPose;
+		TMap<FString, int32> NameToIndexMap;
 	};
 
 	struct FTrack_RE

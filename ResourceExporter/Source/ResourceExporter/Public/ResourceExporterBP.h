@@ -84,6 +84,7 @@ private:
 	// get skeleton data
 	static void GetSkeletonJointsData(const USkeleton* Skeleton, TArray<FJoint_RE>& Output);
 	static void GetSkeletonBindPoseData(const USkeleton* Skeleton, TArray<FTransform>& Output);
+	static void GetSkeletonNameIndexMap(const USkeleton* Skeleton, int32 JointNum, TMap<FString, int32>& Output);
 
 	// get sequence data
 	static void GetSequenceLengthData(UAnimSequence* Sequence, float& Output);

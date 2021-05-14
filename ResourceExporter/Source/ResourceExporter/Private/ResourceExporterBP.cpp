@@ -415,6 +415,20 @@ void UResourceExporterBP::GetSkeletonBindPoseData(const USkeleton* Skeleton, TAr
 	Output = Skeleton->GetReferenceSkeleton().GetRawRefBonePose();
 }
 
+void UResourceExporterBP::GetSkeletonNameIndexMap(const USkeleton* Skeleton, int32 JointNum, TMap<FString, int32>& Output)
+{
+	if (!Skeleton)
+	{
+		return;
+	}
+	Output.Reset();
+	for (int32 i = 0; i < JointNum; i++)
+	{
+		FString JointName = Skeleton->GetReferenceSkeleton().GetBoneName(i).ToString();
+		Output.Add(TTuple<FString, int32>(JointName, i));
+	}
+}
+
 void UResourceExporterBP::GetSequenceLengthData(UAnimSequence* Sequence, float& Output)
 {
 	if (!Sequence)
@@ -515,6 +529,7 @@ RE::FSkeleton_RE UResourceExporterBP::GetDataFromUSkeleton(const USkeleton* Sk)
 
 	GetSkeletonJointsData(Sk, Target.Joints);
 	GetSkeletonBindPoseData(Sk, Target.BindPose);
+	GetSkeletonNameIndexMap(Sk, Target.Joints.Num(), Target.NameToIndexMap);
 
 	return Target;
 }
