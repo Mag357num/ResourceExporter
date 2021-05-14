@@ -74,6 +74,7 @@ namespace RE
 	{
 		Ar << Value.Joints;
 		Ar << Value.BindPose;
+		Ar << Value.NameToIndexMap;
 		return Ar;
 	}
 
