@@ -356,14 +356,28 @@ void UResourceExporterBP::GetSkeletalMeshWeightVerticesData(const USkeletalMesh*
 	{
 		TArray<FSkinWeightInfo> WeightVertice;
 		SkeletalMesh->GetResourceForRendering()->LODRenderData[0].SkinWeightVertexBuffer.GetSkinWeights(WeightVertice);
+		
 		Output.Reset();
 		for (int32 i = 0; i < WeightVertice.Num(); i++)
 		{
 			FSkinnedWeightVertex_RE WeightVertex;
 
+			uint32 SectionNum = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].RenderSections.Num();
+			uint32 SectionIndex = SectionNum - 1;
+			for (uint32 k = 0; k < SectionNum - 1; k++)
+			{
+				int32 BaseIndex = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].RenderSections[k + 1].BaseIndex;
+				if (i < BaseIndex)
+				{
+					SectionIndex = k;
+					break;
+				}
+			}
+
 			for (auto j : WeightVertice[i].InfluenceBones)
 			{
-				WeightVertex.InfluJointIndice.Add(j);
+				uint32 GlobalIndex = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].RenderSections[SectionIndex].BoneMap[j];
+				WeightVertex.InfluJointIndice.Add(GlobalIndex);
 			}
 
 			for (auto j : WeightVertice[i].InfluenceWeights)
