@@ -6,6 +6,13 @@
 
 namespace RE
 {
+	FArchive& operator<<(FArchive& Ar, FJoint_RE& Value)
+	{
+		Ar << Value.Name;
+		Ar << Value.ParentIndex;
+		return Ar;
+	}
+
 	FArchive& operator<<(FArchive& Ar, FStaticVertex_RE& Value)
 	{
 		Ar << Value.Position;
@@ -49,7 +56,7 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FMeshTransfrom& Value)
+	FArchive& operator<<(FArchive& Ar, FTransfrom_RE& Value)
 	{
 		Ar << Value.Translation;
 		Ar << Value.Quat;
@@ -57,16 +64,66 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FStaticMeshComponent_RE& Value)
+	FArchive& operator<<(FArchive& Ar, FCameraComponent_RE& Value)
 	{
+		Ar << Value.Bounding;
+		Ar << Value.Transform;
+		Ar << Value.ProjectionMode;
+		Ar << Value.FieldOfView;
+		Ar << Value.AspectRatio;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FDirectionalLightComponent_RE& Value)
+	{
+		Ar << Value.Bounding;
+		Ar << Value.Transform;
+		Ar << Value.LightColor;
+		Ar << Value.Intensity;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FPointLightComponent_RE& Value)
+	{
+		Ar << Value.Bounding;
+		Ar << Value.Transform;
+		Ar << Value.LightColor;
+		Ar << Value.Intensity;
+		Ar << Value.AttenuationRadius;
+		Ar << Value.SourceRadius;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FStiaticMeshComponent_RE& Value)
+	{
+		Ar << Value.Bounding;
 		Ar << Value.StaticMesh;
-		Ar << Value.MeshTrans;
+		Ar << Value.Transform;
+		Ar << Value.Materials;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FBoxSphereBounds_RE& Value)
+	{
+		Ar << Value.Origin;
+		Ar << Value.BoxExtent;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, AActor_RE& Value)
+	{
+		Ar << Value.Name;
+		Ar << Value.Type;
+		Ar << Value.SMComponents;
+		Ar << Value.CamComponents;
+		Ar << Value.DLightComponent;
+		Ar << Value.PLightComponents;
 		return Ar;
 	}
 
 	FArchive& operator<<(FArchive& Ar, FScene_RE& Value)
 	{
-		Ar << Value.MeshActors;
+		Ar << Value.Actors;
 		return Ar;
 	}
 
@@ -75,13 +132,6 @@ namespace RE
 		Ar << Value.Joints;
 		Ar << Value.BindPose;
 		Ar << Value.NameToIndexMap;
-		return Ar;
-	}
-
-	FArchive& operator<<(FArchive& Ar, FJoint_RE& Value)
-	{
-		Ar << Value.Name;
-		Ar << Value.ParentIndex;
 		return Ar;
 	}
 
@@ -101,4 +151,21 @@ namespace RE
 		Ar << Value.TrackToJointIndexMapTable;
 		return Ar;
 	}
+
+	FArchive& operator<<(FArchive& Ar, FMaterialInterface_RE& Value)
+	{
+		Ar << Value.IsMaterialInstance;
+		Ar << Value.BaseMaterialName;
+		Ar << Value.ScalarParams;
+		Ar << Value.VectorParams;
+		Ar << Value.TextureParams;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FMaterialInfo_RE& Value)
+	{
+		Ar << Value.MaterialName;
+		return Ar;
+	}
+
 }

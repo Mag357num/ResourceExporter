@@ -72,23 +72,95 @@ namespace RE
 		float Aspect;
 	};
 
-	struct FMeshTransfrom // TODO: change to use FTransform
+	struct FTransfrom_RE // TODO: change to use FTransform
 	{
 		FVector Translation;
 		FQuat Quat;
 		FVector Scale;
 	};
 
-	struct FStaticMeshComponent_RE
+	struct FMaterialInterface_RE
 	{
+		bool IsMaterialInstance;
+		FString BaseMaterialName;
+		TArray<float> ScalarParams;
+		TArray<FVector4> VectorParams;
+		TArray<FString> TextureParams;
+	};
+
+	struct FMaterialInfo_RE
+	{
+		FString MaterialName;
+	};
+
+	struct FBoxSphereBounds_RE
+	{
+		FBoxSphereBounds_RE() = default;
+		FBoxSphereBounds_RE(FBoxSphereBounds Bounds) { Origin = Bounds.Origin; BoxExtent = Bounds.BoxExtent; }
+
+		FVector Origin;
+		FVector BoxExtent;
+	};
+
+	struct FDirectionalLightComponent_RE
+	{
+		FBoxSphereBounds_RE Bounding;
+		FTransfrom_RE Transform;
+		FLinearColor LightColor;
+		float Intensity;
+	};
+
+	struct FPointLightComponent_RE
+	{
+		FTransfrom_RE Transform;
+		FLinearColor LightColor;
+		FBoxSphereBounds_RE Bounding;
+		float Intensity;
+		float AttenuationRadius;
+		float SourceRadius;
+	};
+
+	struct FCameraComponent_RE
+	{
+		FBoxSphereBounds_RE Bounding;
+		FTransfrom_RE Transform;
+		uint32 ProjectionMode; // 0:persp, 1: ortho
+		float FieldOfView;
+		float AspectRatio;
+	};
+
+	struct FStiaticMeshComponent_RE
+	{
+		FBoxSphereBounds_RE Bounding;
 		FStaticMesh_Lod_RE StaticMesh;
-		FMeshTransfrom MeshTrans;
+		FTransfrom_RE Transform;
+		TArray<FMaterialInfo_RE> Materials;
+	};
+
+	enum class EActorType
+	{
+		STATICMESH_ACTOR = 0,
+		CAMERA_ACTOR = 1,
+		DIRECTIONALLIGHT_ACTOR = 2,
+		POINTLIGHT_ACTOR = 3
+	};
+
+	struct AActor_RE
+	{
+		FString Name;
+		EActorType Type;
+		TArray<FStiaticMeshComponent_RE> SMComponents;
+		TArray<FCameraComponent_RE> CamComponents;
+		TArray<FDirectionalLightComponent_RE> DLightComponent;
+		TArray<FPointLightComponent_RE> PLightComponents;
 	};
 
 	struct FScene_RE
 	{
-		TArray<FStaticMeshComponent_RE> MeshActors;
+		TArray<AActor_RE> Actors;
 	};
+
+	FArchive& operator<<(FArchive& Ar, FBoxSphereBounds_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FJoint_RE& Value);
 
@@ -102,9 +174,21 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FCamera_RE& Value);
 
-	FArchive& operator<<(FArchive& Ar, FMeshTransfrom& Value);
+	FArchive& operator<<(FArchive& Ar, FTransfrom_RE& Value);
 
-	FArchive& operator<<(FArchive& Ar, FStaticMeshComponent_RE& Value);
+	FArchive& operator<<(FArchive& Ar, FMaterialInterface_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FMaterialInfo_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FCameraComponent_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FDirectionalLightComponent_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FPointLightComponent_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FStiaticMeshComponent_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, AActor_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FScene_RE& Value);
 

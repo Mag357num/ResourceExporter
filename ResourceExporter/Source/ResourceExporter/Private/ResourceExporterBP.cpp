@@ -9,6 +9,8 @@
 #include "JsonObjectConverter.h"
 #include "Serialization/Archive.h"
 #include "Rendering/SkeletalMeshRenderData.h"
+#include "Components/DirectionalLightComponent.h"
+#include "Components/PointLightComponent.h"
 
 typedef TJsonWriter<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriter;
 typedef TJsonWriterFactory<TCHAR, TPrettyJsonPrintPolicy<TCHAR>> FPrettyJsonWriterFactory;
@@ -69,44 +71,222 @@ void UResourceExporterBP::ExportSkeletalMesh_Lod0_Binary(const USkeletalMesh* Sk
 	File->Close();
 }
 
-void UResourceExporterBP::ExportSceneBinary(const UObject* WorldContextObject, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("Scene_")*/)
+UWorld* UResourceExporterBP::CastToWorld(UObject* Object)
+{
+	return Cast<UWorld>(Object);
+}
+
+void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*= TEXT("")*/, const FString& Filename /*= TEXT("Scene_")*/)
 {
 	if (OutputPath.IsEmpty())
 	{
 		OutputPath = FPaths::ProfilingDir();
 	}
-	FString Fullname = OutputPath + Filename + TEXT(".dat");
+	FString Fullname = OutputPath + Filename + TEXT(".scene");
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
 	FScene_RE SceneOutput;
-	TArray<AActor*> Actors; 
-	FName ShowInScene(TEXT("ShowInScene"));
+	FName ExportTag(TEXT("Export"));
 
+	TArray<AActor*> Actors;
 	UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), Actors);
 	for (AActor* Actor : Actors)
 	{
-		if (!Actor->ActorHasTag(ShowInScene)) { continue; }
+		if (!Actor->ActorHasTag(ExportTag)) { continue; }
 
-		FStaticMeshComponent_RE Indiv;
-		UActorComponent* ActCom = Actor->GetComponentByClass(UStaticMeshComponent::StaticClass());
-		if (UStaticMeshComponent* SMCom = Cast<UStaticMeshComponent>(ActCom))
+		AActor_RE ActorExport;
+		ActorExport.Name = Actor->GetFName().ToString();
+
+		// static mesh components
 		{
-			FTransform Trans = SMCom->GetComponentToWorld();
-			Indiv.MeshTrans.Translation = Trans.GetTranslation();
-			//Indiv.MeshRes.Rotator = Trans.GetRotation().Euler();
-			Indiv.MeshTrans.Quat = Trans.GetRotation();
-			Indiv.MeshTrans.Scale = Trans.GetScale3D();
+			auto Components = Actor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+			for (auto i : Components)
+			{
+				UStaticMeshComponent* Component = Cast<UStaticMeshComponent>(i);
+				FStiaticMeshComponent_RE ComponentExport;
 
-			UStaticMesh* SM = SMCom->GetStaticMesh();
-			Indiv.StaticMesh = GetDataFromUStaticMesh(SM);
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
 
-			SceneOutput.MeshActors.Add(Indiv);
+				// staticmesh lod
+				UStaticMesh* SM = Component->GetStaticMesh();
+				ComponentExport.StaticMesh = GetLod0DataFromUStaticMesh(SM);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// material
+				for (int32 j = 0; j < Component->GetNumMaterials(); j++)
+				{
+					FMaterialInfo_RE Mat;
+					Mat.MaterialName = Component->GetMaterial(j)->GetFName().ToString();
+					ComponentExport.Materials.Add(Mat);
+				}
+				ActorExport.SMComponents.Add(ComponentExport);
+			}
 		}
+
+		// camera components
+		{
+			auto Components = Actor->GetComponentsByClass(UCameraComponent::StaticClass());
+			for (auto i : Components)
+			{
+				UCameraComponent* Component = Cast<UCameraComponent>(i);
+				FCameraComponent_RE ComponentExport;
+
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// other parameters
+				ComponentExport.ProjectionMode = 0;
+				ComponentExport.FieldOfView = Component->FieldOfView;
+				ComponentExport.AspectRatio = Component->AspectRatio;
+
+				ActorExport.CamComponents.Add(ComponentExport);
+			}
+		}
+
+		// direcitonal light components
+		{
+			auto Components = Actor->GetComponentsByClass(UDirectionalLightComponent::StaticClass());
+			for (auto i : Components)
+			{
+				UDirectionalLightComponent* Component = Cast<UDirectionalLightComponent>(i);
+				FDirectionalLightComponent_RE ComponentExport;
+
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// color
+				ComponentExport.LightColor = Component->GetLightColor();
+
+				// other parameters
+				ComponentExport.Intensity = Component->Intensity;
+
+				ActorExport.DLightComponent.Add(ComponentExport);
+			}
+		}
+
+		// point light components
+		{
+			auto Components = Actor->GetComponentsByClass(UPointLightComponent::StaticClass());
+			for (auto i : Components)
+			{
+				UPointLightComponent* Component = Cast<UPointLightComponent>(i);
+				FPointLightComponent_RE ComponentExport;
+
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// color
+				ComponentExport.LightColor = Component->GetLightColor();
+
+				// other parameters
+				ComponentExport.Intensity = Component->Intensity;
+				ComponentExport.AttenuationRadius = Component->AttenuationRadius;
+				ComponentExport.SourceRadius = Component->SourceRadius;
+
+				ActorExport.PLightComponents.Add(ComponentExport);
+			}
+		}
+
+		if (ActorExport.CamComponents.Num() > 0)
+		{
+			ActorExport.Type = EActorType::CAMERA_ACTOR;
+		}
+		if (ActorExport.PLightComponents.Num() > 0)
+		{
+			ActorExport.Type = EActorType::POINTLIGHT_ACTOR;
+		}
+		if (ActorExport.DLightComponent.Num() > 0)
+		{
+			ActorExport.Type = EActorType::DIRECTIONALLIGHT_ACTOR;
+		}
+		else
+		{
+			ActorExport.Type = EActorType::STATICMESH_ACTOR;
+		}
+
+		SceneOutput.Actors.Add(ActorExport);
 	}
-	int num = SceneOutput.MeshActors.Num();
 	*File << SceneOutput;
+	File->Close();
+}
+
+void UResourceExporterBP::ExportMaterial(UMaterialInterface* Material, FString OutputPath/* = TEXT("")*/)
+{
+	if (OutputPath.IsEmpty())
+	{
+		OutputPath = FPaths::ProfilingDir();
+	}
+
+	FString Fullname = OutputPath + Material->GetFName().ToString() + TEXT(".material");
+	const TCHAR* FullnameTCHAR = *Fullname;
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	FMaterialInterface_RE Mat;
+	Mat.IsMaterialInstance = Cast<UMaterialInstance>(Material) != nullptr;
+	if (Mat.IsMaterialInstance)
+	{
+		Mat.BaseMaterialName = Cast<UMaterialInstance>(Material)->GetBaseMaterial()->GetFName().ToString();
+	}
+	else
+	{
+		Mat.BaseMaterialName = Material->GetFName().ToString();
+	}
+
+	// scalar
+	TArray<FMaterialParameterInfo> ParameterInfos;
+	TArray<FGuid> Guids;
+	Material->GetAllScalarParameterInfo(ParameterInfos, Guids);
+	for (auto j : ParameterInfos)
+	{
+		float Scalar;
+		Material->GetScalarParameterValue(j.Name, Scalar);
+		Mat.ScalarParams.Add(Scalar);
+	}
+
+	// vector
+	Material->GetAllVectorParameterInfo(ParameterInfos, Guids);
+	for (auto j : ParameterInfos)
+	{
+		FLinearColor Vector;
+		Material->GetVectorParameterValue(j.Name, Vector);
+		Mat.VectorParams.Add(Vector);
+	}
+
+	// texture
+	TArray<UTexture*> UsedTextures;
+	Material->GetUsedTextures(UsedTextures, EMaterialQualityLevel::High, true, ERHIFeatureLevel::SM5, true);
+	for (auto j : UsedTextures)
+	{
+		Mat.TextureParams.Add(j->GetFName().ToString());
+	}
+
+	*File << Mat;
+
 	File->Close();
 }
 
@@ -121,7 +301,7 @@ void UResourceExporterBP::ExportStaticMesh_Lod0_Binary(const UStaticMesh* Static
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FStaticMesh_Lod_RE Target = GetDataFromUStaticMesh(StaticMesh);
+	FStaticMesh_Lod_RE Target = GetLod0DataFromUStaticMesh(StaticMesh);
 
 	*File << Target;
 
@@ -473,12 +653,12 @@ void UResourceExporterBP::GetSequenceTracksData(const UAnimSequence* Sequence, T
 	TArray<FRawAnimSequenceTrack> UETracks = Sequence->GetRawAnimationData();
 
 	Output.Reset();
-	for (auto i : UETracks)
+	for (int32 i = 0; i < UETracks.Num(); i++)
 	{
 		FTrack_RE Track;
-		Track.Scales = i.ScaleKeys;
-		Track.Quaternions = i.RotKeys;
-		Track.Translations = i.PosKeys;
+		Track.Scales = UETracks[i].ScaleKeys;
+		Track.Quaternions = UETracks[i].RotKeys;
+		Track.Translations = UETracks[i].PosKeys;
 
 		Output.Add(Track);
 	}
@@ -498,7 +678,7 @@ void UResourceExporterBP::GetSequenceTrackJointMapTableData(const UAnimSequence*
 	}
 }
 
-FStaticMesh_Lod_RE UResourceExporterBP::GetDataFromUStaticMesh(const UStaticMesh* SM)
+FStaticMesh_Lod_RE UResourceExporterBP::GetLod0DataFromUStaticMesh(const UStaticMesh* SM)
 {
 	FStaticMesh_Lod_RE Target;
 	TArray<float> Vertices;
