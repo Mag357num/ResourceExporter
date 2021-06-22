@@ -58,9 +58,9 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FTransfrom_RE& Value)
 	{
-		Ar << Value.Translation;
-		Ar << Value.Quat;
 		Ar << Value.Scale;
+		Ar << Value.Quat;
+		Ar << Value.Translation;
 		return Ar;
 	}
 
@@ -71,6 +71,7 @@ namespace RE
 		Ar << Value.ProjectionMode;
 		Ar << Value.FieldOfView;
 		Ar << Value.AspectRatio;
+		Ar << Value.OrthoWidth;
 		return Ar;
 	}
 
@@ -97,8 +98,8 @@ namespace RE
 	FArchive& operator<<(FArchive& Ar, FStiaticMeshComponent_RE& Value)
 	{
 		Ar << Value.Bounding;
-		Ar << Value.StaticMesh;
 		Ar << Value.Transform;
+		Ar << Value.StaticMesh;
 		Ar << Value.Materials;
 		return Ar;
 	}
@@ -114,10 +115,10 @@ namespace RE
 	{
 		Ar << Value.Name;
 		Ar << Value.Type;
-		Ar << Value.SMComponents;
 		Ar << Value.CamComponents;
-		Ar << Value.DLightComponent;
+		Ar << Value.DLightComponents;
 		Ar << Value.PLightComponents;
+		Ar << Value.SMComponents;
 		return Ar;
 	}
 

@@ -3,6 +3,7 @@
 
 #include "ResourceExporterBP.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraActor.h"
 #include "Math/Vector2D.h"
 #include "CameraArray.h"
 #include "Kismet/GameplayStatics.h"
@@ -98,36 +99,25 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 		AActor_RE ActorExport;
 		ActorExport.Name = Actor->GetFName().ToString();
 
-		// static mesh components
+		if (Cast<UCameraComponent>(Actor->GetRootComponent()->GetChildComponent(0)))
 		{
-			auto Components = Actor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
-			for (auto i : Components)
-			{
-				UStaticMeshComponent* Component = Cast<UStaticMeshComponent>(i);
-				FStiaticMeshComponent_RE ComponentExport;
-
-				// bouding
-				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
-
-				// staticmesh lod
-				UStaticMesh* SM = Component->GetStaticMesh();
-				ComponentExport.StaticMesh = GetLod0DataFromUStaticMesh(SM);
-
-				// transform
-				FTransform Trans = Component->GetComponentToWorld();
-				ComponentExport.Transform.Translation = Trans.GetTranslation();
-				ComponentExport.Transform.Quat = Trans.GetRotation();
-				ComponentExport.Transform.Scale = Trans.GetScale3D();
-
-				// material
-				for (int32 j = 0; j < Component->GetNumMaterials(); j++)
-				{
-					FMaterialInfo_RE Mat;
-					Mat.MaterialName = Component->GetMaterial(j)->GetFName().ToString();
-					ComponentExport.Materials.Add(Mat);
-				}
-				ActorExport.SMComponents.Add(ComponentExport);
-			}
+			ActorExport.Type = EActorType::CAMERA_ACTOR;
+		}
+		else if (Cast<UDirectionalLightComponent>(Actor->GetRootComponent()))
+		{
+			ActorExport.Type = EActorType::DIRECTIONALLIGHT_ACTOR;
+		}
+		else if (Cast<UPointLightComponent>(Actor->GetRootComponent()))
+		{
+			ActorExport.Type = EActorType::POINTLIGHT_ACTOR;
+		}
+		else if (Cast<UStaticMeshComponent>(Actor->GetRootComponent()))
+		{
+			ActorExport.Type = EActorType::STATICMESH_ACTOR;
+		}
+		else
+		{
+			ActorExport.Type = EActorType::UNKNOW;
 		}
 
 		// camera components
@@ -151,6 +141,7 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 				ComponentExport.ProjectionMode = 0;
 				ComponentExport.FieldOfView = Component->FieldOfView;
 				ComponentExport.AspectRatio = Component->AspectRatio;
+				ComponentExport.OrthoWidth = Component->OrthoWidth;
 
 				ActorExport.CamComponents.Add(ComponentExport);
 			}
@@ -179,7 +170,7 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 				// other parameters
 				ComponentExport.Intensity = Component->Intensity;
 
-				ActorExport.DLightComponent.Add(ComponentExport);
+				ActorExport.DLightComponents.Add(ComponentExport);
 			}
 		}
 
@@ -212,21 +203,36 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 			}
 		}
 
-		if (ActorExport.CamComponents.Num() > 0)
+		// static mesh components
 		{
-			ActorExport.Type = EActorType::CAMERA_ACTOR;
-		}
-		if (ActorExport.PLightComponents.Num() > 0)
-		{
-			ActorExport.Type = EActorType::POINTLIGHT_ACTOR;
-		}
-		if (ActorExport.DLightComponent.Num() > 0)
-		{
-			ActorExport.Type = EActorType::DIRECTIONALLIGHT_ACTOR;
-		}
-		else
-		{
-			ActorExport.Type = EActorType::STATICMESH_ACTOR;
+			auto Components = Actor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
+			for (auto i : Components)
+			{
+				UStaticMeshComponent* Component = Cast<UStaticMeshComponent>(i);
+				FStiaticMeshComponent_RE ComponentExport;
+
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
+
+				// staticmesh lod
+				UStaticMesh* SM = Component->GetStaticMesh();
+				ComponentExport.StaticMesh = GetLod0DataFromUStaticMesh(SM);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// material
+				for (int32 j = 0; j < Component->GetNumMaterials(); j++)
+				{
+					FMaterialInfo_RE Mat;
+					Mat.MaterialName = Component->GetMaterial(j)->GetFName().ToString();
+					ComponentExport.Materials.Add(Mat);
+				}
+				ActorExport.SMComponents.Add(ComponentExport);
+			}
 		}
 
 		SceneOutput.Actors.Add(ActorExport);

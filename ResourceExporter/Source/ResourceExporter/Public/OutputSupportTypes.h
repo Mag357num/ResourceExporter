@@ -72,11 +72,11 @@ namespace RE
 		float Aspect;
 	};
 
-	struct FTransfrom_RE // TODO: change to use FTransform
+	struct FTransfrom_RE
 	{
-		FVector Translation;
-		FQuat Quat;
 		FVector Scale;
+		FQuat Quat;
+		FVector Translation;
 	};
 
 	struct FMaterialInterface_RE
@@ -112,9 +112,9 @@ namespace RE
 
 	struct FPointLightComponent_RE
 	{
+		FBoxSphereBounds_RE Bounding;
 		FTransfrom_RE Transform;
 		FLinearColor LightColor;
-		FBoxSphereBounds_RE Bounding;
 		float Intensity;
 		float AttenuationRadius;
 		float SourceRadius;
@@ -127,13 +127,14 @@ namespace RE
 		uint32 ProjectionMode; // 0:persp, 1: ortho
 		float FieldOfView;
 		float AspectRatio;
+		float OrthoWidth;
 	};
 
 	struct FStiaticMeshComponent_RE
 	{
 		FBoxSphereBounds_RE Bounding;
-		FStaticMesh_Lod_RE StaticMesh;
 		FTransfrom_RE Transform;
+		FStaticMesh_Lod_RE StaticMesh;
 		TArray<FMaterialInfo_RE> Materials;
 	};
 
@@ -142,17 +143,18 @@ namespace RE
 		STATICMESH_ACTOR = 0,
 		CAMERA_ACTOR = 1,
 		DIRECTIONALLIGHT_ACTOR = 2,
-		POINTLIGHT_ACTOR = 3
+		POINTLIGHT_ACTOR = 3,
+		UNKNOW = 4
 	};
 
 	struct AActor_RE
 	{
 		FString Name;
 		EActorType Type;
-		TArray<FStiaticMeshComponent_RE> SMComponents;
 		TArray<FCameraComponent_RE> CamComponents;
-		TArray<FDirectionalLightComponent_RE> DLightComponent;
+		TArray<FDirectionalLightComponent_RE> DLightComponents;
 		TArray<FPointLightComponent_RE> PLightComponents;
+		TArray<FStiaticMeshComponent_RE> SMComponents;
 	};
 
 	struct FScene_RE
