@@ -104,6 +104,16 @@ namespace RE
 		return Ar;
 	}
 
+	FArchive& operator<<(FArchive& Ar, FSkeletalMeshComponent_RE& Value)
+	{
+		Ar << Value.Bounding;
+		Ar << Value.Transform;
+		Ar << Value.SkeletalMesh;
+		Ar << Value.Skeleton;
+		Ar << Value.Sequences;
+		Ar << Value.Materials;
+	}
+
 	FArchive& operator<<(FArchive& Ar, FBoxSphereBounds_RE& Value)
 	{
 		Ar << Value.Origin;
@@ -153,9 +163,20 @@ namespace RE
 		return Ar;
 	}
 
-	FArchive& operator<<(FArchive& Ar, FMaterialInterface_RE& Value)
+	FArchive& operator<<(FArchive& Ar, FMaterial_RE& Value)
 	{
-		Ar << Value.IsMaterialInstance;
+		Ar << Value.MaterialName;
+		Ar << Value.ShaderFileName;
+		Ar << Value.BlendMode;
+		Ar << Value.ScalarParams;
+		Ar << Value.VectorParams;
+		Ar << Value.TextureParams;
+		return Ar;
+	}
+
+	FArchive& operator<<(FArchive& Ar, FMaterialInstance_RE& Value)
+	{
+		Ar << Value.MaterialInstanceName;
 		Ar << Value.BaseMaterialName;
 		Ar << Value.ScalarParams;
 		Ar << Value.VectorParams;
@@ -166,7 +187,7 @@ namespace RE
 	FArchive& operator<<(FArchive& Ar, FMaterialInfo_RE& Value)
 	{
 		Ar << Value.MaterialName;
+		Ar << Value.IsMaterialInstance;
 		return Ar;
 	}
-
 }

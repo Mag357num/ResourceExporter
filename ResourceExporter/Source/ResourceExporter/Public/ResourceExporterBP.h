@@ -36,7 +36,10 @@ public:
 	static void ExportSceneActors(UWorld* World, FString OutputPath = TEXT(""), const FString& Filename = TEXT("Scene_"));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
-	static void ExportMaterial(UMaterialInterface* Material, FString OutputPath = TEXT(""));
+	static void ExportMaterial(UMaterial* Material, FString OutputPath = TEXT(""));
+
+	UFUNCTION(BlueprintCallable, Category = "ResExport")
+	static void ExportMaterialInstance(UMaterialInstance* MaterialInstance, FString OutputPath = TEXT(""));
 
 	UFUNCTION(BlueprintCallable, Category = "ResExport")
 	static void ExportStaticMesh_Lod0_Binary(const UStaticMesh* StaticMesh, FString OutputPath = TEXT(""), const FString& Filename = TEXT("StaticMeshBinary_"));

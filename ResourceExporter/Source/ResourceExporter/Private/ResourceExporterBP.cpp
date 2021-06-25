@@ -115,6 +115,10 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 		{
 			ActorExport.Type = EActorType::STATICMESH_ACTOR;
 		}
+		else if (Cast<USkeletalMeshComponent>(Actor->GetRootComponent()))
+		{
+			ActorExport.Type = EActorType::SKELETALMESH_ACTOR;
+		}
 		else
 		{
 			ActorExport.Type = EActorType::UNKNOW;
@@ -229,9 +233,53 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 				{
 					FMaterialInfo_RE Mat;
 					Mat.MaterialName = Component->GetMaterial(j)->GetFName().ToString();
+					Mat.IsMaterialInstance = Cast<UMaterialInstance>(Component->GetMaterial(j)) != nullptr;
 					ComponentExport.Materials.Add(Mat);
 				}
 				ActorExport.SMComponents.Add(ComponentExport);
+			}
+		}
+
+		// skeletal mesh components
+		{
+			auto Components = Actor->GetComponentsByClass(USkeletalMeshComponent::StaticClass());
+			for (auto i : Components)
+			{
+				USkeletalMeshComponent* Component = Cast<USkeletalMeshComponent>(i);
+				FSkeletalMeshComponent_RE ComponentExport;
+
+				// bouding
+				ComponentExport.Bounding = FBoxSphereBounds_RE(Component->Bounds);
+
+				// skeletalmesh lod
+				USkeletalMesh* SKM = Component->SkeletalMesh;
+				ComponentExport.SkeletalMesh = GetDataFromUSkeletalMesh(SKM);
+
+				// transform
+				FTransform Trans = Component->GetComponentToWorld();
+				ComponentExport.Transform.Translation = Trans.GetTranslation();
+				ComponentExport.Transform.Quat = Trans.GetRotation();
+				ComponentExport.Transform.Scale = Trans.GetScale3D();
+
+				// skeleton
+				USkeleton* Skeleton = SKM->Skeleton;
+				ComponentExport.Skeleton = GetDataFromUSkeleton(Skeleton);
+
+				// sequence
+				for (int32 j = 0; j < Component->GetAnimInstance()->; j++)
+				{
+
+				}
+
+				// material
+				for (int32 j = 0; j < Component->GetNumMaterials(); j++)
+				{
+					FMaterialInfo_RE Mat;
+					Mat.MaterialName = Component->GetMaterial(j)->GetFName().ToString();
+					Mat.IsMaterialInstance = Cast<UMaterialInstance>(Component->GetMaterial(j)) != nullptr;
+					ComponentExport.Materials.Add(Mat);
+				}
+				ActorExport.SKMComponents.Add(ComponentExport);
 			}
 		}
 
@@ -241,7 +289,7 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 	File->Close();
 }
 
-void UResourceExporterBP::ExportMaterial(UMaterialInterface* Material, FString OutputPath/* = TEXT("")*/)
+void UResourceExporterBP::ExportMaterial(UMaterial* Material, FString OutputPath /*= TEXT("")*/)
 {
 	if (OutputPath.IsEmpty())
 	{
@@ -252,15 +300,35 @@ void UResourceExporterBP::ExportMaterial(UMaterialInterface* Material, FString O
 	const TCHAR* FullnameTCHAR = *Fullname;
 	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
 
-	FMaterialInterface_RE Mat;
-	Mat.IsMaterialInstance = Cast<UMaterialInstance>(Material) != nullptr;
-	if (Mat.IsMaterialInstance)
+	FMaterial_RE Mat;
+	Mat.MaterialName = Material->GetFName().ToString();
+	Mat.ShaderFileName = "Resource\\Shader\\" + Mat.MaterialName + ".shader";
+
+	switch (Material->GetBlendMode())
 	{
-		Mat.BaseMaterialName = Cast<UMaterialInstance>(Material)->GetBaseMaterial()->GetFName().ToString();
-	}
-	else
-	{
-		Mat.BaseMaterialName = Material->GetFName().ToString();
+	case EBlendMode::BLEND_Additive:
+		Mat.BlendMode = EBlendMode_RE::ADDITIVE_BM;
+		break;
+	case EBlendMode::BLEND_AlphaComposite:
+		Mat.BlendMode = EBlendMode_RE::ALPHACOMPOSITE_BM;
+		break;
+	case EBlendMode::BLEND_AlphaHoldout:
+		Mat.BlendMode = EBlendMode_RE::ALPHAHOLDOUT_BM;
+		break;
+	case EBlendMode::BLEND_Masked:
+		Mat.BlendMode = EBlendMode_RE::MASKED_BM;
+		break;
+	case EBlendMode::BLEND_Modulate:
+		Mat.BlendMode = EBlendMode_RE::MODULATE_BM;
+		break;
+	case EBlendMode::BLEND_Opaque:
+		Mat.BlendMode = EBlendMode_RE::OPAQUE_BM;
+		break;
+	case EBlendMode::BLEND_Translucent:
+		Mat.BlendMode = EBlendMode_RE::TRANSLUCENT_BM;
+		break;
+	default:
+		break;
 	}
 
 	// scalar
@@ -286,6 +354,54 @@ void UResourceExporterBP::ExportMaterial(UMaterialInterface* Material, FString O
 	// texture
 	TArray<UTexture*> UsedTextures;
 	Material->GetUsedTextures(UsedTextures, EMaterialQualityLevel::High, true, ERHIFeatureLevel::SM5, true);
+	for (auto j : UsedTextures)
+	{
+		Mat.TextureParams.Add(j->GetFName().ToString());
+	}
+
+	*File << Mat;
+
+	File->Close();
+}
+
+void UResourceExporterBP::ExportMaterialInstance(UMaterialInstance* MaterialInstance, FString OutputPath/* = TEXT("")*/)
+{
+	if (OutputPath.IsEmpty())
+	{
+		OutputPath = FPaths::ProfilingDir();
+	}
+
+	FString Fullname = OutputPath + MaterialInstance->GetFName().ToString() + TEXT(".matins");
+	const TCHAR* FullnameTCHAR = *Fullname;
+	FArchive* File = IFileManager::Get().CreateFileWriter(FullnameTCHAR, 0);
+
+	FMaterialInstance_RE Mat;
+	Mat.MaterialInstanceName = MaterialInstance->GetFName().ToString();
+	Mat.BaseMaterialName = MaterialInstance->GetBaseMaterial()->GetFName().ToString();
+
+	// scalar
+	TArray<FMaterialParameterInfo> ParameterInfos;
+	TArray<FGuid> Guids;
+	MaterialInstance->GetAllScalarParameterInfo(ParameterInfos, Guids);
+	for (auto j : ParameterInfos)
+	{
+		float Scalar;
+		MaterialInstance->GetScalarParameterValue(j.Name, Scalar);
+		Mat.ScalarParams.Add(Scalar);
+	}
+
+	// vector
+	MaterialInstance->GetAllVectorParameterInfo(ParameterInfos, Guids);
+	for (auto j : ParameterInfos)
+	{
+		FLinearColor Vector;
+		MaterialInstance->GetVectorParameterValue(j.Name, Vector);
+		Mat.VectorParams.Add(Vector);
+	}
+
+	// texture
+	TArray<UTexture*> UsedTextures;
+	MaterialInstance->GetUsedTextures(UsedTextures, EMaterialQualityLevel::High, true, ERHIFeatureLevel::SM5, true);
 	for (auto j : UsedTextures)
 	{
 		Mat.TextureParams.Add(j->GetFName().ToString());

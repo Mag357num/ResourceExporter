@@ -79,9 +79,30 @@ namespace RE
 		FVector Translation;
 	};
 
-	struct FMaterialInterface_RE
+	enum class EBlendMode_RE
 	{
-		bool IsMaterialInstance;
+		OPAQUE_BM = 0,
+		MASKED_BM = 1,
+		TRANSLUCENT_BM = 2,
+		ADDITIVE_BM = 3,
+		MODULATE_BM = 4,
+		ALPHACOMPOSITE_BM = 5,
+		ALPHAHOLDOUT_BM = 6
+	};
+
+	struct FMaterial_RE
+	{
+		FString MaterialName;
+		FString ShaderFileName;
+		EBlendMode_RE BlendMode;
+		TArray<float> ScalarParams;
+		TArray<FVector4> VectorParams;
+		TArray<FString> TextureParams;
+	};
+
+	struct FMaterialInstance_RE
+	{
+		FString MaterialInstanceName;
 		FString BaseMaterialName;
 		TArray<float> ScalarParams;
 		TArray<FVector4> VectorParams;
@@ -91,6 +112,7 @@ namespace RE
 	struct FMaterialInfo_RE
 	{
 		FString MaterialName;
+		bool IsMaterialInstance;
 	};
 
 	struct FBoxSphereBounds_RE
@@ -138,13 +160,24 @@ namespace RE
 		TArray<FMaterialInfo_RE> Materials;
 	};
 
+	struct FSkeletalMeshComponent_RE
+	{
+		FBoxSphereBounds_RE Bounding;
+		FTransfrom_RE Transform;
+		FSkeletalMesh_Lod_RE SkeletalMesh;
+		FSkeleton_RE Skeleton;
+		TArray<FSequence_RE> Sequences;
+		TArray<FMaterialInfo_RE> Materials;
+	};
+
 	enum class EActorType
 	{
 		STATICMESH_ACTOR = 0,
 		CAMERA_ACTOR = 1,
 		DIRECTIONALLIGHT_ACTOR = 2,
 		POINTLIGHT_ACTOR = 3,
-		UNKNOW = 4
+		SKELETALMESH_ACTOR = 4,
+		UNKNOW = 5
 	};
 
 	struct AActor_RE
@@ -155,6 +188,7 @@ namespace RE
 		TArray<FDirectionalLightComponent_RE> DLightComponents;
 		TArray<FPointLightComponent_RE> PLightComponents;
 		TArray<FStiaticMeshComponent_RE> SMComponents;
+		TArray<FSkeletalMeshComponent_RE> SKMComponents;
 	};
 
 	struct FScene_RE
@@ -178,7 +212,9 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FTransfrom_RE& Value);
 
-	FArchive& operator<<(FArchive& Ar, FMaterialInterface_RE& Value);
+	FArchive& operator<<(FArchive& Ar, FMaterial_RE& Value);
+
+	FArchive& operator<<(FArchive& Ar, FMaterialInstance_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FMaterialInfo_RE& Value);
 
@@ -190,6 +226,8 @@ namespace RE
 
 	FArchive& operator<<(FArchive& Ar, FStiaticMeshComponent_RE& Value);
 
+	FArchive& operator<<(FArchive& Ar, FSkeletalMeshComponent_RE& Value);
+	
 	FArchive& operator<<(FArchive& Ar, AActor_RE& Value);
 
 	FArchive& operator<<(FArchive& Ar, FScene_RE& Value);
