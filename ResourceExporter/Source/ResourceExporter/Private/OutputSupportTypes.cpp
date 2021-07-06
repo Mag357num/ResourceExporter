@@ -112,6 +112,7 @@ namespace RE
 		Ar << Value.Skeleton;
 		Ar << Value.Sequences;
 		Ar << Value.Materials;
+		return Ar;
 	}
 
 	FArchive& operator<<(FArchive& Ar, FBoxSphereBounds_RE& Value)

@@ -266,10 +266,10 @@ void UResourceExporterBP::ExportSceneActors(UWorld* World, FString OutputPath /*
 				ComponentExport.Skeleton = GetDataFromUSkeleton(Skeleton);
 
 				// sequence
-				for (int32 j = 0; j < Component->GetAnimInstance()->; j++)
-				{
+				//for (int32 j = 0; j < Component->GetAnimInstance()->; j++)
+				//{
 
-				}
+				//}
 
 				// material
 				for (int32 j = 0; j < Component->GetNumMaterials(); j++)
